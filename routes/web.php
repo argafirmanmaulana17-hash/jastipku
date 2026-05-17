@@ -38,6 +38,13 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
+
+// =============================================
+// RUTE PELANGGAN / USER BIASA
+// =============================================
+Route::post('/order/{order}/rate', [DashboardController::class, 'storeRating'])->name('order.rate')->middleware('auth');
+
+
 // =============================================
 // DASHBOARD ROUTES (Auth Required)
 // =============================================

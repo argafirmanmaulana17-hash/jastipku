@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -42,7 +42,7 @@ class RegisterController extends Controller
             'role'         => $validated['role'],
             'area_layanan' => $validated['area_layanan'] ?? null,
             'kendaraan'    => $validated['kendaraan'] ?? null,
-            'status'       => $validated['role'] === 'jastiper' ? 'offline' : null,
+            'status'       => 'offline', 
         ]);
 
         Auth::login($user);

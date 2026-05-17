@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Rating;
 
 class DashboardController extends Controller
 {
@@ -187,5 +188,29 @@ class DashboardController extends Controller
         }
 
         return back()->with('success', 'Status order diperbarui!');
+    } 
+//ulasamn bintang
+    public function storeRating(Request $request, Order $order)
+    {
+        $request->validate([
+            'bintang' => 'required|integer|min:1|max:5',
+            'komentar' => 'nullable|string|max:500',
+        ]);
+
+        \App\Models\Rating::create([
+            'order_id'    => $order->id,
+            'user_id'     => \Illuminate\Support\Facades\Auth::id(),
+            'jastiper_id' => $order->jastiper_id,
+            'bintang'     => $request->bintang,
+            'komentar'    => $request->komentar,
+        ]);
+
+        $jastiper = $order->jastiper;
+        if ($jastiper) {
+            $rataRataRating = \App\Models\Rating::where('jastiper_id', $jastiper->id)->avg('bintang');
+            $jastiper->update(['rating' => $rataRataRating]);
+        }
+
+        return back()->with('success', 'Terima kasih! Ulasan bintang berhasil dikirim.');
     }
 }

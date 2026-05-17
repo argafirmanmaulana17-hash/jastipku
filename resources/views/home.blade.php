@@ -199,39 +199,39 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @foreach([
-                ['name'=>'Ahmad Rizki','area'=>'Kantin Utama & Koperasi','orders'=>48,'rating'=>4.9,'status'=>'Aktif'],
-                ['name'=>'Siti Rahma','area'=>'Mall Dekat Kampus','orders'=>62,'rating'=>5.0,'status'=>'Aktif'],
-                ['name'=>'Budi Santoso','area'=>'Fotokopi & Percetakan','orders'=>31,'rating'=>4.8,'status'=>'Sibuk'],
-            ] as $jastiper)
+            @forelse($activeJastipers as $jastiper)
             <div class="card-hover bg-white border border-slate-200 rounded-2xl p-6">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                            {{ substr($jastiper['name'], 0, 1) }}
+                            {{ substr($jastiper->name, 0, 1) }}
                         </div>
                         <div>
-                            <div class="font-semibold text-slate-800">{{ $jastiper['name'] }}</div>
-                            <div class="text-xs text-slate-500">{{ $jastiper['area'] }}</div>
+                            <div class="font-semibold text-slate-800">{{ $jastiper->name }}</div>
+                            <div class="text-xs text-slate-500">{{ $jastiper->area_layanan ?? 'Semua Area' }}</div>
                         </div>
                     </div>
-                    <span class="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full {{ $jastiper['status'] === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                        <span class="w-1.5 h-1.5 rounded-full {{ $jastiper['status'] === 'Aktif' ? 'bg-green-500' : 'bg-yellow-500' }}"></span>
-                        {{ $jastiper['status'] }}
+                    <span class="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        {{ ucfirst($jastiper->status) }}
                     </span>
                 </div>
                 <div class="flex gap-4 text-sm">
                     <div>
                         <span class="text-slate-500">Order</span>
-                        <div class="font-semibold text-slate-800">{{ $jastiper['orders'] }}</div>
+                        <div class="font-semibold text-slate-800">{{ $jastiper->total_order }}</div>
                     </div>
                     <div>
                         <span class="text-slate-500">Rating</span>
-                        <div class="font-semibold text-yellow-500">★ {{ $jastiper['rating'] }}</div>
+                        <div class="font-semibold text-yellow-500">★ {{ number_format($jastiper->rating, 1) }}</div>
                     </div>
                 </div>
             </div>
-            @endforeach
+            @empty
+            <div class="col-span-3 bg-slate-50 rounded-2xl p-8 text-center text-slate-500 border border-slate-200">
+                Belum ada jastiper yang sedang aktif saat ini. Yuk, daftar jadi jastiper!
+            </div>
+            @endforelse
         </div>
     </div>
 </section>
