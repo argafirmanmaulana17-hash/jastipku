@@ -15,6 +15,10 @@ use App\Http\Controllers\Auth\RegisterController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+Route::get('/faq', function () {
+    return view('faq');
+})->name('faq');
+
 // Order
 Route::get('/order', [OrderController::class, 'create'])->name('order.create');
 Route::post('/order', [OrderController::class, 'store'])->name('order.store');
@@ -23,7 +27,7 @@ Route::post('/order', [OrderController::class, 'store'])->name('order.store');
 Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking');
 
 // Chat
-Route::get('/chat', [ChatController::class, 'index'])->name('chat');
+// Route::get('/chat', [ChatController::class, 'index'])->name('chat');
 
 // =============================================
 // AUTH ROUTES
@@ -38,12 +42,19 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
+// Rute untuk Chat Privat
+Route::get('/chat/{order}', [ChatController::class, 'show'])->name('chat.show')->middleware('auth');
+Route::post('/chat/{order}', [ChatController::class, 'store'])->name('chat.store')->middleware('auth');
+
+Route::get('/chat/{order}/messages', [ChatController::class, 'getMessages'])->name('chat.messages')->middleware('auth');
 
 // =============================================
 // RUTE PELANGGAN / USER BIASA
 // =============================================
 Route::post('/order/{order}/rate', [DashboardController::class, 'storeRating'])->name('order.rate')->middleware('auth');
 
+
+Route::get('/riwayat-pesanan', [DashboardController::class, 'userHistory'])->name('user.history')->middleware('auth');
 
 // =============================================
 // DASHBOARD ROUTES (Auth Required)

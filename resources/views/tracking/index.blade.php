@@ -131,6 +131,10 @@
                         <div class="font-semibold text-slate-800">{{ $order->jastiper->name }}</div>
                         <div class="text-sm text-slate-500">⭐ {{ $order->jastiper->rating ?? '5.0' }} · {{ $order->jastiper->total_order ?? '0' }} order selesai</div>
                     </div>
+                    <a href="{{ route('chat.show', $order->id) }}" 
+   class="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors mr-2">
+   💬 Live Chat
+</a>
                     <a href="https://wa.me/62{{ ltrim($order->jastiper->whatsapp, '0') }}" target="_blank"
                         class="ml-auto bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-green-600 transition-colors">
                         💬 WA

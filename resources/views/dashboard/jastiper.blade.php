@@ -11,6 +11,7 @@
                 <div class="p-6">
                     <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Menu Jastiper</div>
                     <nav class="space-y-1">
+                        
                         @foreach ([['href' => '/dashboard/jastiper', 'icon' => '📊', 'label' => 'Overview'], ['href' => '/dashboard/jastiper/orders', 'icon' => '📦', 'label' => 'Order Masuk'], ['href' => '/dashboard/jastiper/history', 'icon' => '📋', 'label' => 'Riwayat Order'], ['href' => '/dashboard/jastiper/earnings', 'icon' => '💰', 'label' => 'Penghasilan'], ['href' => '/dashboard/jastiper/profile', 'icon' => '👤', 'label' => 'Profil Saya']] as $menu)
                             <a href="{{ $menu['href'] }}"
                                 class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors {{ request()->is(ltrim($menu['href'], '/')) ? 'active' : '' }}">
@@ -167,6 +168,10 @@
                                         class="bg-green-50 text-green-600 font-semibold px-4 py-2 rounded-xl hover:bg-green-100 transition-colors text-sm border border-green-200">
                                         💬 WA
                                     </a>
+                                    <a href="{{ route('chat.show', $order->id) }}" 
+   class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors text-sm border border-blue-200">
+   💬 Chat Pembeli
+</a>
                                 </div>
                             </div>
                         @empty

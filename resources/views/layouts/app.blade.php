@@ -189,8 +189,8 @@
                         Jastip</a>
                     <a href="/tracking"
                         class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Tracking</a>
-                    <a href="/chat"
-                        class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Chat Kami</a>
+                    <a href="{{ route('faq') }}"
+                        class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Bantuan / FAQ</a>
                 </div>
 
                 <!-- Auth Buttons -->

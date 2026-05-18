@@ -101,4 +101,10 @@ class Order extends Model
             default => ucfirst($this->status),
         };
     }
+
+    // Relasi ke tabel chats
+    public function chats()
+    {
+        return $this->hasMany(Chat::class);
+    }
 }
