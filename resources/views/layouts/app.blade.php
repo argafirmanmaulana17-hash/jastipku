@@ -167,18 +167,18 @@
     <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
-                <a href="/" class="flex items-center gap-2">
-                    <div
-                        class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
-                    </div>
-                    <span class="font-display text-xl font-800 text-slate-900">Jastip<span
-                            class="text-blue-600">Ku</span></span>
-                </a>
+                
+                <!-- LOGO -->
+                <a href="{{ route('home') }}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+    
+    <img src="{{ asset('images/logo1.png') }}" alt="Logo JastipKu" class="h-10 w-10 object-cover rounded-xl shadow-sm">
+    
+    <span class="font-display text-xl font-bold text-slate-900 tracking-tight">
+        Jastip<span class="text-blue-600">Ku</span>
+    </span>
+
+</a>
+                    
 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center gap-6">
@@ -198,6 +198,10 @@
                     @auth
                         <a href="/dashboard"
                             class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Dashboard</a>
+                             <a href="{{ route('user.history') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">  Riwayat Pesanan</a>
+                        
+                            
+                            
                         <form method="POST" action="/logout" class="inline">
                             @csrf
                             <button type="submit"
