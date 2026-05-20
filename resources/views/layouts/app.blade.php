@@ -180,21 +180,40 @@
         </div>
 
         <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-2 shadow-inner">
-            <a href="/" class="block py-2 text-sm font-medium text-slate-600">Beranda</a>
-            <a href="/order" class="block py-2 text-sm font-medium text-slate-600">Pesan Jastip</a>
-            <a href="/tracking" class="block py-2 text-sm font-medium text-slate-600">Tracking & Riwayat</a>
-            <div class="pt-2 border-t border-slate-100 flex gap-3">
-                @auth
-                    <a href="/dashboard" class="flex-1 text-center py-2 text-sm font-medium border border-slate-200 rounded-lg">Dashboard</a>
+            @auth
+                @if(auth()->user()->role === 'jastiper')
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 px-2 pt-1">Menu Kerja Jastiper</div>
+                    <a href="{{ route('dashboard.jastiper.index') }}" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2">📊 Overview</a>
+                    <a href="{{ route('dashboard.jastiper.orders') }}" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2">📥 Order Masuk</a>
+                    <a href="{{ route('dashboard.jastiper.history') }}" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2">📜 Riwayat Kerja</a>
+                    <a href="{{ route('dashboard.jastiper.earnings') }}" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2">💰 Penghasilan</a>
+                    <a href="{{ route('dashboard.jastiper.profile') }}" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2">👤 Profil Jastiper</a>
+                @elseif(auth()->user()->role === 'admin')
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 px-2 pt-1">Menu Panel Admin</div>
+                    <a href="{{ route('dashboard.admin.index') }}" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-blue-50 transition-all">📊 Main Dashboard</a>
+                    <a href="{{ route('dashboard.admin.orders') }}" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-blue-50 transition-all">📦 Semua Orderan</a>
+                    <a href="{{ route('dashboard.admin.jastipers') }}" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-blue-50 transition-all">👥 Data Jastiper</a>
+                @else
+                    <a href="/order" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-slate-50 flex items-center gap-2">🛍️ Pesan Jastip Baru</a>
+                    <a href="/tracking" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-slate-50 flex items-center gap-2">🎯 Lacak & Riwayat Belanja</a>
+                @endif
+                
+                <div class="pt-4 mt-2 border-t border-slate-100 flex gap-3">
+                    <a href="/dashboard" class="flex-1 text-center py-2 text-sm font-semibold border border-slate-200 rounded-xl bg-slate-50 text-slate-700">Dashboard</a>
                     <form method="POST" action="/logout" class="flex-1">
                         @csrf
-                        <button type="submit" class="w-full text-center py-2 text-sm font-medium bg-red-50 text-red-600 rounded-lg">Logout</button>
+                        <button type="submit" class="w-full text-center py-2 text-sm font-semibold bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors">Logout</button>
                     </form>
-                @else
-                    <a href="/login" class="flex-1 text-center py-2 text-sm font-medium border border-slate-200 rounded-lg">Masuk</a>
-                    <a href="/register" class="flex-1 text-center py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg">Daftar</a>
-                @endauth
-            </div>
+                </div>
+            @else
+                <a href="/order" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-slate-50">🛍️ Pesan Jastip</a>
+                <a href="/tracking" class="block py-2.5 px-3 text-sm font-medium rounded-xl text-slate-700 hover:bg-slate-50">🎯 Lacak Pesanan</a>
+                
+                <div class="pt-4 mt-2 border-t border-slate-100 flex gap-3">
+                    <a href="/login" class="flex-1 text-center py-2 text-sm font-semibold border border-slate-200 rounded-xl text-slate-700">Masuk</a>
+                    <a href="/register" class="flex-1 text-center py-2 text-sm font-semibold bg-blue-600 text-white rounded-xl shadow-md shadow-blue-100">Daftar</a>
+                </div>
+            @endauth
         </div>
     </nav>
 
