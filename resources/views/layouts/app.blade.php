@@ -169,21 +169,20 @@
             <div class="flex items-center justify-between h-16">
                 
                 <!-- LOGO -->
-                <a href="{{ route('home') }}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-    
-    <img src="{{ asset('images/logo1.png') }}" alt="Logo JastipKu" class="h-10 w-10 object-cover rounded-xl shadow-sm">
-    
-    <span class="font-display text-xl font-bold text-slate-900 tracking-tight">
-        Jastip<span class="text-blue-600">Ku</span>
-    </span>
-
-</a>
+           <a href="{{ auth()->user()?->role === 'jastiper' ? route('dashboard.jastiper.index') : (auth()->user()?->role === 'admin' ? route('dashboard.admin.index') : route('home')) }}" 
+        class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img src="{{ asset('images/logo1.png') }}" alt="Logo JastipKu" class="h-10 w-10 object-cover rounded-xl shadow-sm">
+            <span class="font-display text-xl font-bold text-slate-900 tracking-tight">
+                Jastip<span class="text-blue-600">Ku</span>
+            </span>
+        </a>
                     
 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center gap-6">
-                    <a href="/"
-                        class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Beranda</a>
+                   <a href="{{ auth()->user()?->role === 'jastiper' ? route('dashboard.jastiper.index') : (auth()->user()?->role === 'admin' ? route('dashboard.admin.index') : route('home')) }}" 
+                    class="text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors">Beranda</a>   
+                    
                     <a href="/order"
                         class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Pesan
                         Jastip</a>

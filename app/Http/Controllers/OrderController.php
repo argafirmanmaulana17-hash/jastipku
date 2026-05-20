@@ -11,7 +11,10 @@ class OrderController extends Controller
 {
     public function create()
     {
-        return view('order.create');
+        // Ambil daftar alamat tersimpan milik user yang sedang login
+    $savedAddresses = \App\Models\Address::where('user_id', auth()->id())->get();
+
+    return view('order.create', compact('savedAddresses'));
     }
 
     public function store(Request $request)
@@ -34,6 +37,14 @@ class OrderController extends Controller
         $validated['user_id'] = Auth::id();
 
         $order = Order::create($validated);
+        // Jika user menulis label alamat baru di form order, otomatis simpan ke buku alamat
+        if ($request->has('label_alamat_baru') && $request->label_alamat_baru != null) {
+            \App\Models\Address::create([
+                'user_id' => auth()->id(),
+                'label' => $request->label_alamat_baru,
+                'alamat_lengkap' => $request->lokasi_antar, 
+            ]);
+        }
 
         return redirect()->route('order.create')
             ->with('success', "Order berhasil! Kode order kamu: {$order->kode_order}. Simpan kode ini untuk tracking pesanan.");

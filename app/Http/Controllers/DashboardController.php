@@ -69,7 +69,7 @@ class DashboardController extends Controller
 
     public function toggleJastiper(User $jastiper)
     {
-        $newStatus = $jastiper->status === 'aktif' ? 'offline' : 'aktif';
+        $newStatus = $jastiper->status == 'aktif' ? 'offline' : 'aktif';
         $jastiper->update(['status' => $newStatus]);
         return back()->with('success', 'Status jastiper diperbarui!');
     }
@@ -151,7 +151,7 @@ class DashboardController extends Controller
     public function toggleStatus()
     {
         $user = Auth::user();
-        $newStatus = $user->status === 'aktif' ? 'offline' : 'aktif';
+        $newStatus = $user->status == 'aktif' ? 'offline' : 'aktif';
         $user->update(['status' => $newStatus]);
         return back()->with('success', 'Status berhasil diubah ke ' . $newStatus);
     }
@@ -175,21 +175,25 @@ class DashboardController extends Controller
     {
         $request->validate(['status' => 'required|in:otw,selesai']);
 
-        // Pastikan hanya jastiper yang handle order ini yang bisa update
-        if ($order->jastiper_id !== Auth::id()) {
+       
+        if ($order->jastiper_id != Auth::id()) {
             abort(403);
         }
 
         $order->update(['status' => $request->status]);
 
+
         // Update total order jastiper jika selesai
-        if ($request->status === 'selesai') {
-            Auth::user()->increment('total_order');
+        if ($request->status == 'selesai') {
+            \App\Models\User::where('id', Auth::id())->increment('total_order');
         }
 
         return back()->with('success', 'Status order diperbarui!');
     } 
-//ulasamn bintang
+
+    // ==========================================
+    // ULASAN BINTANG
+    // ==========================================
     public function storeRating(Request $request, Order $order)
     {
         $request->validate([
@@ -212,5 +216,18 @@ class DashboardController extends Controller
         }
 
         return back()->with('success', 'Terima kasih! Ulasan bintang berhasil dikirim.');
+    }
+
+    // ==========================================
+    // PELANGGAN / USER DASHBOARD
+    // ==========================================
+    public function userHistory()
+    {
+        // Tarik semua pesanan milik user yang sedang login
+        $orders = Order::where('user_id', Auth::id())
+                    ->latest()
+                    ->paginate(10);
+                    
+        return view('dashboard.user-history', compact('orders'));
     }
 }

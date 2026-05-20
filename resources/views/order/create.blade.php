@@ -45,23 +45,91 @@
                         Informasi Pemesan
                     </h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
+                       <div>
                             <label class="block text-sm font-medium text-slate-700 mb-2">Nama Lengkap *</label>
-                            <input type="text" name="nama" value="{{ old('nama') }}" placeholder="Nama kamu" required
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm">
+                            <input type="text" name="nama" value="{{ old('nama', Auth::user()->name) }}" placeholder="Nama kamu" required
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm bg-slate-50 cursor-not-allowed text-slate-500" readonly>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-2">No. WhatsApp *</label>
-                            <input type="text" name="whatsapp" value="{{ old('whatsapp') }}" placeholder="08xx-xxxx-xxxx" required
+                            <input type="text" name="whatsapp" value="{{ old('whatsapp', Auth::user()->whatsapp ?? Auth::user()->no_hp ?? '') }}" placeholder="08xx-xxxx-xxxx" required
                                 class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm">
                         </div>
-                        <div class="sm:col-span-2">
+                       <div class="sm:col-span-2">
                             <label class="block text-sm font-medium text-slate-700 mb-2">Lokasi Pengiriman *</label>
-                            <input type="text" name="lokasi_antar" value="{{ old('lokasi_antar') }}" placeholder="Contoh: Gedung A lantai 2, Perpustakaan, Kos Blok B no.12" required
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm">
+                            
+                            @if($savedAddresses->isNotEmpty())
+                                <select id="select_alamat" onchange="pilihAlamatOtomatis(this.value)"
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm bg-white mb-3">
+                                    <option value="">-- Pilih Alamat Pengiriman --</option>
+                                    @foreach($savedAddresses as $addr)
+                                        <option value="{{ $addr->alamat_lengkap }}">
+                                            {{ strtoupper($addr->label) }} - {{ $addr->alamat_lengkap }}
+                                        </option>
+                                    @endforeach
+                                    <option value="tambah_baru" class="text-blue-600 font-bold">➕ Gunakan Alamat Baru...</option>
+                                </select>
+                            @endif
+
+                            <div id="box_alamat_baru" class="{{ $savedAddresses->isEmpty() ? '' : 'hidden' }} bg-amber-50 border border-amber-200 rounded-xl p-4 mb-3">
+                                <p class="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1">
+                                    💡 <span class="uppercase tracking-wider">Tulis Alamat Baru</span>
+                                </p>
+                                <input type="text" name="label_alamat_baru" id="label_alamat_baru" placeholder="Simpan alamat ini sebagai? (Contoh: Kosan Blok A, Rumah)" 
+                                    class="w-full px-4 py-2 mb-2 rounded-lg border border-amber-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all text-sm bg-white">
+                                
+                                <textarea id="lokasi_antar_baru" rows="2" placeholder="Detail pengiriman: Gedung A lantai 2, atau Kos Blok B no.12"
+                                    class="w-full px-4 py-2 rounded-lg border border-amber-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all text-sm resize-none"></textarea>
+                            </div>
+
+                            <input type="hidden" name="lokasi_antar" id="lokasi_antar_real" required>
+
+                            <script>
+                                const selectAlamat = document.getElementById('select_alamat');
+                                const boxAlamatBaru = document.getElementById('box_alamat_baru');
+                                const lokasiAntarReal = document.getElementById('lokasi_antar_real');
+                                const lokasiAntarBaru = document.getElementById('lokasi_antar_baru');
+                                const labelAlamatBaru = document.getElementById('label_alamat_baru');
+
+                                function pilihAlamatOtomatis(val) {
+                                    if (val === 'tambah_baru') {
+                                        // Buka kotak ketik manual
+                                        boxAlamatBaru.classList.remove('hidden');
+                                        lokasiAntarReal.value = lokasiAntarBaru.value;
+                                        labelAlamatBaru.disabled = false;
+                                        lokasiAntarBaru.required = true;
+                                    } else {
+                                        // Sembunyikan kotak ketik manual, pakai nilai dari dropdown
+                                        boxAlamatBaru.classList.add('hidden');
+                                        lokasiAntarReal.value = val;
+                                        labelAlamatBaru.disabled = true;
+                                        labelAlamatBaru.value = ''; 
+                                        lokasiAntarBaru.required = false;
+                                    }
+                                }
+
+                                // Sinkronisasi ketikan teks di textarea baru ke dalam input hidden Laravel
+                                if (lokasiAntarBaru) {
+                                    lokasiAntarBaru.addEventListener('input', function() {
+                                        if (!selectAlamat || selectAlamat.value === 'tambah_baru') {
+                                            lokasiAntarReal.value = this.value;
+                                        }
+                                    });
+                                }
+
+                                // Jalankan pengecekan awal saat halaman pertama kali dibuka
+                                document.addEventListener("DOMContentLoaded", function() {
+                                    if (!selectAlamat) {
+                                        // Kasus user baru yang belum punya alamat sama sekali
+                                        lokasiAntarReal.value = lokasiAntarBaru.value;
+                                        lokasiAntarBaru.required = true;
+                                    } else {
+                                        // Kasus user lama yang sudah punya pilihan alamat
+                                        pilihAlamatOtomatis(selectAlamat.value);
+                                    }
+                                });
+                            </script>
                         </div>
-                    </div>
-                </div>
 
                 <!-- Detail Order -->
                 <div class="mb-8">
@@ -135,10 +203,10 @@
                 </div>
 
                 <!-- Catatan -->
-                <div class="mb-8">
+               <div class="mb-8">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Catatan Tambahan (opsional)</label>
                     <textarea name="catatan" rows="2" placeholder="Ada instruksi khusus? Tulis di sini..."
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm resize-none">{{ old('catatan') }}</textarea>
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm resize-none">{{ old('catatan', optional(Auth::user()->orders()->latest()->first())->catatan) }}</textarea>
                 </div>
 
                 <!-- Info Box -->
