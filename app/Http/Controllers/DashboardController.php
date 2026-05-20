@@ -15,11 +15,15 @@ class DashboardController extends Controller
     public function redirect()
     {
         $user = Auth::user();
-        return match ($user->role) {
-            'admin' => redirect()->route('dashboard.admin.index'),
-            'jastiper' => redirect()->route('dashboard.jastiper.index'),
-            default => redirect()->route('home'),
-        };
+
+        switch ($user->role) {
+            case 'admin':
+                return redirect()->route('dashboard.admin.index');
+            case 'jastiper':
+                return redirect()->route('dashboard.jastiper.index');
+            default:
+                return redirect()->route('home');
+        }
     }
 
     // ==========================================
@@ -152,7 +156,8 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $newStatus = $user->status == 'aktif' ? 'offline' : 'aktif';
-        $user->update(['status' => $newStatus]);
+        \App\Models\User::where('id', Auth::id())->update(['status' => $newStatus]);
+        
         return back()->with('success', 'Status berhasil diubah ke ' . $newStatus);
     }
 
