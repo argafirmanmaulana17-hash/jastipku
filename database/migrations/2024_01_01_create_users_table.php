@@ -1,4 +1,5 @@
 <?php
+
 // =====================================================
 // LETAKKAN FILE INI DI: database/migrations/
 // Nama file: 2024_01_01_000001_create_users_table.php

@@ -96,8 +96,9 @@ class User extends Authenticatable
     {
         return $query->where('role', 'admin');
     }
+
     public function addresses()
-{
-    return $this->hasMany(Address::class);
-}
+    {
+        return $this->hasMany(Address::class);
+    }
 }

@@ -15,12 +15,12 @@ class DatabaseSeeder extends Seeder
         // ADMIN
         // =====================
         User::create([
-            'name'     => 'Admin JastipKu',
-            'email'    => 'admin@jastipku.com',
+            'name' => 'Admin JastipKu',
+            'email' => 'admin@jastipku.com',
             'password' => Hash::make('password'),
             'whatsapp' => '081200000001',
-            'role'     => 'admin',
-            'status'   => 'aktif',
+            'role' => 'admin',
+            'status' => 'aktif',
         ]);
 
         // =====================
@@ -35,16 +35,16 @@ class DatabaseSeeder extends Seeder
 
         foreach ($jastipers as $j) {
             User::create([
-                'name'         => $j['name'],
-                'email'        => $j['email'],
-                'password'     => Hash::make('password'),
-                'whatsapp'     => '0812' . rand(10000000, 99999999),
-                'role'         => 'jastiper',
+                'name' => $j['name'],
+                'email' => $j['email'],
+                'password' => Hash::make('password'),
+                'whatsapp' => '0812'.rand(10000000, 99999999),
+                'role' => 'jastiper',
                 'area_layanan' => $j['area'],
-                'kendaraan'    => $j['kendaraan'],
-                'status'       => 'aktif',
-                'rating'       => $j['rating'],
-                'total_order'  => $j['total'],
+                'kendaraan' => $j['kendaraan'],
+                'status' => 'aktif',
+                'rating' => $j['rating'],
+                'total_order' => $j['total'],
             ]);
         }
 
@@ -61,11 +61,11 @@ class DatabaseSeeder extends Seeder
 
         foreach ($users as $u) {
             User::create([
-                'name'     => $u['name'],
-                'email'    => $u['email'],
+                'name' => $u['name'],
+                'email' => $u['email'],
                 'password' => Hash::make('password'),
-                'whatsapp' => '0813' . rand(10000000, 99999999),
-                'role'     => 'user',
+                'whatsapp' => '0813'.rand(10000000, 99999999),
+                'role' => 'user',
             ]);
         }
 
@@ -82,26 +82,26 @@ class DatabaseSeeder extends Seeder
         ];
 
         $jastiperIds = User::where('role', 'jastiper')->pluck('id')->toArray();
-        $userIds     = User::where('role', 'user')->pluck('id')->toArray();
+        $userIds = User::where('role', 'user')->pluck('id')->toArray();
 
         foreach ($sampleOrders as $i => $o) {
-            $year  = date('Y');
+            $year = date('Y');
             $count = $i + 1;
             Order::create([
-                'kode_order'     => 'JK-' . $year . '-' . str_pad($count, 4, '0', STR_PAD_LEFT),
-                'user_id'        => $userIds[array_rand($userIds)],
-                'jastiper_id'    => in_array($o['status'], ['proses', 'otw', 'selesai']) ? $jastiperIds[array_rand($jastiperIds)] : null,
-                'nama'           => $o['nama'],
-                'whatsapp'       => '0812' . rand(10000000, 99999999),
-                'kategori'       => $o['kategori'],
-                'lokasi_ambil'   => $o['lokasi_ambil'],
-                'lokasi_antar'   => $o['lokasi_antar'],
+                'kode_order' => 'JK-'.$year.'-'.str_pad($count, 4, '0', STR_PAD_LEFT),
+                'user_id' => $userIds[array_rand($userIds)],
+                'jastiper_id' => in_array($o['status'], ['proses', 'otw', 'selesai']) ? $jastiperIds[array_rand($jastiperIds)] : null,
+                'nama' => $o['nama'],
+                'whatsapp' => '0812'.rand(10000000, 99999999),
+                'kategori' => $o['kategori'],
+                'lokasi_ambil' => $o['lokasi_ambil'],
+                'lokasi_antar' => $o['lokasi_antar'],
                 'detail_pesanan' => $o['item'],
-                'budget'         => $o['budget'],
-                'waktu'          => 'segera',
-                'pembayaran'     => ['dana', 'cash', 'transfer'][array_rand(['dana', 'cash', 'transfer'])],
-                'status'         => $o['status'],
-                'dp_paid'        => $o['status'] !== 'pending',
+                'budget' => $o['budget'],
+                'waktu' => 'segera',
+                'pembayaran' => ['dana', 'cash', 'transfer'][array_rand(['dana', 'cash', 'transfer'])],
+                'status' => $o['status'],
+                'dp_paid' => $o['status'] !== 'pending',
             ]);
         }
     }

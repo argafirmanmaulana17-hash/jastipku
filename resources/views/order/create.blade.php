@@ -132,56 +132,81 @@
                         </div>
 
                 <!-- Detail Order -->
-                <div class="mb-8">
-                    <h2 class="font-display text-lg font-700 text-slate-800 mb-4 flex items-center gap-2">
-                        <span class="w-7 h-7 bg-blue-600 text-white rounded-lg flex items-center justify-center text-sm">2</span>
-                        Detail Pesanan
-                    </h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Kategori *</label>
-                            <select name="kategori" required
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm bg-white">
-                                <option value="">Pilih kategori...</option>
-                                <option value="makanan" {{ old('kategori') == 'makanan' ? 'selected' : '' }}>🍔 Makanan & Minuman</option>
-                                <option value="atk" {{ old('kategori') == 'atk' ? 'selected' : '' }}>📚 Alat Tulis & Buku</option>
-                                <option value="obat" {{ old('kategori') == 'obat' ? 'selected' : '' }}>💊 Obat & Kesehatan</option>
-                                <option value="fashion" {{ old('kategori') == 'fashion' ? 'selected' : '' }}>👕 Fashion</option>
-                                <option value="elektronik" {{ old('kategori') == 'elektronik' ? 'selected' : '' }}>💻 Elektronik</option>
-                                <option value="minimarket" {{ old('kategori') == 'minimarket' ? 'selected' : '' }}>🛒 Minimarket</option>
-                                <option value="kado" {{ old('kategori') == 'kado' ? 'selected' : '' }}>🎁 Kado</option>
-                                <option value="lainnya" {{ old('kategori') == 'lainnya' ? 'selected' : '' }}>✨ Lainnya</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Lokasi Pengambilan *</label>
-                            <input type="text" name="lokasi_ambil" value="{{ old('lokasi_ambil') }}" placeholder="Contoh: Kantin Utama, Indomaret Jl. xxx" required
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Detail Pesanan *</label>
-                            <textarea name="detail_pesanan" rows="4" placeholder="Jelaskan detailnya: nama produk, ukuran, warna, jumlah, dll. Semakin detail semakin baik!" required
-                                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm resize-none">{{ old('detail_pesanan') }}</textarea>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Estimasi Budget *</label>
-                            <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">Rp</span>
-                                <input type="number" name="budget" value="{{ old('budget') }}" placeholder="50000" required
-                                    class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Waktu Dibutuhkan</label>
-                            <select name="waktu" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm bg-white">
-                                <option value="segera">⚡ Secepatnya</option>
-                                <option value="1jam">🕐 Dalam 1 Jam</option>
-                                <option value="2jam">🕑 Dalam 2 Jam</option>
-                                <option value="hari_ini">📅 Hari Ini</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+<div class="mb-8">
+    <h2 class="font-display text-lg font-700 text-slate-800 mb-4 flex items-center gap-2">
+        <span class="w-7 h-7 bg-blue-600 text-white rounded-lg flex items-center justify-center text-sm">2</span>
+        Detail Pesanan
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Kategori *</label>
+            <select name="kategori" id="kategori" required
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm bg-white">
+                <option value="">Pilih kategori...</option>
+                <option value="makanan" {{ old('kategori') == 'makanan' ? 'selected' : '' }}>🍔 Makanan & Minuman</option>
+                <option value="atk" {{ old('kategori') == 'atk' ? 'selected' : '' }}>📚 Alat Tulis & Buku</option>
+                <option value="obat" {{ old('kategori') == 'obat' ? 'selected' : '' }}>💊 Obat & Kesehatan</option>
+                <option value="fashion" {{ old('kategori') == 'fashion' ? 'selected' : '' }}>👕 Fashion</option>
+                <option value="elektronik" {{ old('kategori') == 'elektronik' ? 'selected' : '' }}>💻 Elektronik</option>
+                <option value="minimarket" {{ old('kategori') == 'minimarket' ? 'selected' : '' }}>🛒 Minimarket</option>
+                <option value="kado" {{ old('kategori') == 'kado' ? 'selected' : '' }}>🎁 Kado</option>
+                <option value="lainnya" {{ old('kategori') == 'lainnya' ? 'selected' : '' }}>✨ Lainnya</option>
+            </select>
+        </div>
+
+        <div id="menu-pricelist-box" class="sm:col-span-2 {{ old('kategori') == 'makanan' ? '' : 'hidden' }}">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Pilih Menu Price List *</label>
+            <select name="menu_item_id" id="menu_item_id"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm bg-white">
+                <option value="">Pilih menu...</option>
+                @foreach($menuItems as $menu)
+                    <option value="{{ $menu->id }}"
+                        data-harga="{{ $menu->harga }}"
+                        data-toko="{{ $menu->toko }}"
+                        {{ old('menu_item_id') == $menu->id ? 'selected' : '' }}>
+                        {{ $menu->nama }} - {{ $menu->toko }} - Rp {{ number_format($menu->harga, 0, ',', '.') }}
+                    </option>
+                @endforeach
+            </select>
+            <p class="text-xs text-slate-500 mt-2">
+                Untuk makanan/minuman, harga mengikuti price list. Ongkos jastip otomatis Rp3.000.
+            </p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Lokasi Pengambilan *</label>
+            <input type="text" name="lokasi_ambil" value="{{ old('lokasi_ambil') }}" placeholder="Contoh: Kantin Utama, Indomaret Jl. xxx" required
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm">
+        </div>
+
+        <div class="sm:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Detail Pesanan *</label>
+            <textarea name="detail_pesanan" rows="4" placeholder="Jelaskan detailnya: nama produk, ukuran, warna, jumlah, dll." required
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm resize-none">{{ old('detail_pesanan') }}</textarea>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Estimasi Budget</label>
+            <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">Rp</span>
+                <input type="number" name="budget" id="budget" value="{{ old('budget') }}" placeholder="Boleh kosong untuk barang penawaran"
+                    class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Waktu Dibutuhkan</label>
+            <select name="waktu"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm bg-white">
+                <option value="segera">⚡ Secepatnya</option>
+                <option value="1jam">🕐 Dalam 1 Jam</option>
+                <option value="2jam">🕑 Dalam 2 Jam</option>
+                <option value="hari_ini">📅 Hari Ini</option>
+            </select>
+        </div>
+    </div>
+</div>
 
                 <!-- Pembayaran -->
                 <div class="mb-8">
@@ -218,6 +243,46 @@
                         </div>
                     </div>
                 </div>
+
+                <script>
+    const kategoriSelect = document.getElementById('kategori');
+    const menuBox = document.getElementById('menu-pricelist-box');
+    const menuSelect = document.getElementById('menu_item_id');
+    const budgetInput = document.getElementById('budget');
+    const lokasiAmbilInput = document.querySelector('input[name="lokasi_ambil"]');
+
+    function toggleHargaFlow() {
+        if (!kategoriSelect) return;
+
+        const isMakanan = kategoriSelect.value === 'makanan';
+
+        if (isMakanan) {
+            menuBox.classList.remove('hidden');
+            menuSelect.required = true;
+            budgetInput.readOnly = true;
+            budgetInput.placeholder = 'Otomatis dari price list';
+        } else {
+            menuBox.classList.add('hidden');
+            menuSelect.required = false;
+            menuSelect.value = '';
+            budgetInput.readOnly = false;
+            budgetInput.placeholder = 'Estimasi saja, boleh kosong';
+        }
+    }
+
+    kategoriSelect?.addEventListener('change', toggleHargaFlow);
+
+    menuSelect?.addEventListener('change', function () {
+        const selected = this.options[this.selectedIndex];
+        const harga = selected.getAttribute('data-harga');
+        const toko = selected.getAttribute('data-toko');
+
+        if (harga) budgetInput.value = harga;
+        if (toko && lokasiAmbilInput) lokasiAmbilInput.value = toko;
+    });
+
+    document.addEventListener('DOMContentLoaded', toggleHargaFlow);
+</script>
 
                 <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-4 rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 hover:-translate-y-0.5 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

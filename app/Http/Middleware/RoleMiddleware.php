@@ -19,11 +19,11 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!$request->user()) {
+        if (! $request->user()) {
             return redirect('/login');
         }
 
-        if (!in_array($request->user()->role, $roles)) {
+        if (! in_array($request->user()->role, $roles)) {
             abort(403, 'Akses ditolak. Kamu tidak memiliki izin untuk halaman ini.');
         }
 

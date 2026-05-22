@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
-use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
@@ -16,7 +16,7 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required',
         ]);
 
@@ -25,10 +25,10 @@ class LoginController extends Controller
 
             $user = Auth::user();
 
-            return match($user->role) {
-                'admin'    => redirect()->intended('/dashboard/admin'),
+            return match ($user->role) {
+                'admin' => redirect()->intended('/dashboard/admin'),
                 'jastiper' => redirect()->intended('/dashboard/jastiper'),
-                default    => redirect()->intended('/'),
+                default => redirect()->intended('/'),
             };
         }
 
@@ -42,6 +42,7 @@ class LoginController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/');
     }
 }

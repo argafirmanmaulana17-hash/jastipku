@@ -1,13 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\TrackingController;
-use App\Http\Controllers\ChatController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
+use Illuminate\Support\Facades\Route;
 
 // =============================================
 // PUBLIC ROUTES (Bebas diakses siapa saja)
@@ -48,6 +48,10 @@ Route::middleware('auth')->group(function () {
 
     // Pelanggan / User Biasa
     Route::post('/order/{order}/rate', [DashboardController::class, 'storeRating'])->name('order.rate');
+
+    Route::patch('/order/{order}/approve-price', [DashboardController::class, 'approvePrice'])->name('order.approve-price');
+    Route::patch('/order/{order}/reject-price', [DashboardController::class, 'rejectPrice'])->name('order.reject-price');
+
     Route::get('/riwayat-pesanan', [DashboardController::class, 'userHistory'])->name('user.history');
 
     // Chat Privat
@@ -85,6 +89,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/profile', [DashboardController::class, 'jastiperProfile'])->name('profile');
             Route::post('/toggle-status', [DashboardController::class, 'toggleStatus'])->name('toggle-status');
             Route::patch('/orders/{order}/accept', [DashboardController::class, 'acceptOrder'])->name('orders.accept');
+            Route::patch('/orders/{order}/offer-price', [DashboardController::class, 'offerPrice'])->name('orders.offer-price');
             Route::patch('/orders/{order}/reject', [DashboardController::class, 'rejectOrder'])->name('orders.reject');
             Route::patch('/orders/{order}/update-status', [DashboardController::class, 'jastiperUpdateStatus'])->name('orders.update-status');
         });

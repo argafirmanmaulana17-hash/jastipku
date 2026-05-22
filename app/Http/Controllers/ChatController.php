@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Routing\Controller; // Menggunakan ini agar tidak error seperti kemarin
+use App\Models\Chat; // Menggunakan ini agar tidak error seperti kemarin
 use App\Models\Order;
-use App\Models\Chat;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class ChatController extends Controller
@@ -16,7 +16,7 @@ class ChatController extends Controller
         if (Auth::id() != $order->user_id && Auth::id() != $order->jastiper_id) {
             abort(403, 'Akses Ditolak: Ini bukan pesanan Anda.');
         }
-        
+
         // Ambil riwayat pesan, urutkan dari yang paling lama ke yang terbaru
         $chats = $order->chats()->with('sender')->orderBy('created_at', 'asc')->get();
 
@@ -39,9 +39,9 @@ class ChatController extends Controller
 
         // Simpan pesan ke database
         Chat::create([
-            'order_id'  => $order->id,
+            'order_id' => $order->id,
             'sender_id' => Auth::id(),
-            'message'   => $request->message,
+            'message' => $request->message,
         ]);
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -68,10 +68,10 @@ class ChatController extends Controller
             ->get()
             ->map(function ($chat) {
                 return [
-                    'id'      => $chat->id,
+                    'id' => $chat->id,
                     'message' => $chat->message,
-                    'is_me'   => $chat->sender_id == Auth::id(), // Pastikan pakai ==
-                    'time'    => $chat->created_at->format('H:i')
+                    'is_me' => $chat->sender_id == Auth::id(), // Pastikan pakai ==
+                    'time' => $chat->created_at->format('H:i'),
                 ];
             });
 

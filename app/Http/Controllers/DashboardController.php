@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Rating;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Rating;
 
 class DashboardController extends Controller
 {
@@ -36,7 +36,7 @@ class DashboardController extends Controller
             'total_orders' => Order::count(),
             'today_orders' => Order::today()->count(),
             'active_jastipers' => User::activeJastipers()->count(),
-            'total_revenue' => Order::selesai()->sum('budget'),
+            'total_revenue' => Order::selesai()->sum('total_bayar'),
         ];
 
         $recentOrders = Order::with('jastiper')->latest()->take(10)->get();
@@ -48,6 +48,7 @@ class DashboardController extends Controller
     public function adminOrders()
     {
         $orders = Order::with(['user', 'jastiper'])->latest()->paginate(20);
+
         return view('dashboard.admin-orders', compact('orders'));
     }
 
@@ -55,19 +56,22 @@ class DashboardController extends Controller
     {
         $order->load(['user', 'jastiper', 'rating']);
         $jastipers = User::activeJastipers()->get();
+
         return view('dashboard.admin-order-detail', compact('order', 'jastipers'));
     }
 
     public function updateOrderStatus(Request $request, Order $order)
     {
-        $request->validate(['status' => 'required|in:pending,proses,otw,selesai,batal']);
+        $$request->validate(['status' => 'required|in:pending,menunggu_harga,menunggu_persetujuan,proses,otw,selesai,batal']);
         $order->update(['status' => $request->status]);
+
         return back()->with('success', 'Status order berhasil diupdate!');
     }
 
     public function adminJastipers()
     {
         $jastipers = User::jastipers()->withCount(['jastiperOrders as orders_count'])->latest()->paginate(20);
+
         return view('dashboard.admin-jastipers', compact('jastipers'));
     }
 
@@ -75,12 +79,14 @@ class DashboardController extends Controller
     {
         $newStatus = $jastiper->status == 'aktif' ? 'offline' : 'aktif';
         $jastiper->update(['status' => $newStatus]);
+
         return back()->with('success', 'Status jastiper diperbarui!');
     }
 
     public function adminUsers()
     {
         $users = User::where('role', 'user')->latest()->paginate(20);
+
         return view('dashboard.admin-users', compact('users'));
     }
 
@@ -94,6 +100,7 @@ class DashboardController extends Controller
                 ->groupBy('bulan')
                 ->get(),
         ];
+
         return view('dashboard.admin-reports', compact('data'));
     }
 
@@ -118,10 +125,13 @@ class DashboardController extends Controller
             'monthly_earn' => Order::where('jastiper_id', $user->id)
                 ->selesai()
                 ->whereMonth('created_at', date('m'))
-                ->sum('budget'),
+                ->sum('ongkos_jastip'),
         ];
 
-        $pendingOrders = Order::where('status', 'pending')->latest()->get();
+        $pendingOrders = Order::where('status', 'pending')
+            ->whereNull('jastiper_id')
+            ->latest()
+            ->get();
         $activeOrders = Order::where('jastiper_id', $user->id)->active()->latest()->get();
 
         return view('dashboard.jastiper', compact('jastiper', 'stats', 'pendingOrders', 'activeOrders'));
@@ -129,26 +139,33 @@ class DashboardController extends Controller
 
     public function jastiperOrders()
     {
-        $orders = Order::where('status', 'pending')->latest()->paginate(15);
+        $orders = Order::where('status', 'pending')
+            ->whereNull('jastiper_id')
+            ->latest()
+            ->paginate(15);
+
         return view('dashboard.jastiper-orders', compact('orders'));
     }
 
     public function jastiperHistory()
     {
         $orders = Order::where('jastiper_id', Auth::id())->latest()->paginate(15);
+
         return view('dashboard.jastiper-history', compact('orders'));
     }
 
     public function jastiperEarnings()
     {
         $orders = Order::where('jastiper_id', Auth::id())->selesai()->latest()->get();
-        $totalEarnings = $orders->sum('budget');
+        $totalEarnings = $orders->sum('ongkos_jastip');
+
         return view('dashboard.jastiper-earnings', compact('orders', 'totalEarnings'));
     }
 
     public function jastiperProfile()
     {
         $user = Auth::user();
+
         return view('dashboard.jastiper-profile', compact('user'));
     }
 
@@ -156,18 +173,60 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $newStatus = $user->status == 'aktif' ? 'offline' : 'aktif';
-        \App\Models\User::where('id', Auth::id())->update(['status' => $newStatus]);
-        
-        return back()->with('success', 'Status berhasil diubah ke ' . $newStatus);
+        User::where('id', Auth::id())->update(['status' => $newStatus]);
+
+        return back()->with('success', 'Status berhasil diubah ke '.$newStatus);
     }
 
     public function acceptOrder(Request $request, Order $order)
     {
+        if ($order->jastiper_id && $order->jastiper_id != Auth::id()) {
+            abort(403);
+        }
+
+        if ($order->jenis_harga === 'pricelist') {
+            $order->update([
+                'jastiper_id' => Auth::id(),
+                'status' => 'proses',
+                'harga_disetujui_at' => now(),
+            ]);
+
+            return back()->with('success', 'Order price list diterima dan langsung diproses!');
+        }
+
         $order->update([
             'jastiper_id' => Auth::id(),
-            'status' => 'proses',
+            'status' => 'menunggu_harga',
         ]);
-        return back()->with('success', 'Order berhasil diterima!');
+
+        return back()->with('success', 'Order diterima! Silakan ajukan harga ke pembeli.');
+    }
+
+    public function offerPrice(Request $request, Order $order)
+    {
+        if ($order->jastiper_id != Auth::id()) {
+            abort(403);
+        }
+
+        if ($order->status !== 'menunggu_harga') {
+            return back()->with('error', 'Order ini tidak sedang menunggu pengajuan harga.');
+        }
+
+        $validated = $request->validate([
+            'harga_barang' => 'required|numeric|min:1000',
+            'ongkos_jastip' => 'required|numeric|min:1000',
+            'catatan_harga' => 'nullable|string|max:500',
+        ]);
+
+        $order->update([
+            'harga_barang' => $validated['harga_barang'],
+            'ongkos_jastip' => $validated['ongkos_jastip'],
+            'total_bayar' => $validated['harga_barang'] + $validated['ongkos_jastip'],
+            'catatan_harga' => $validated['catatan_harga'] ?? null,
+            'status' => 'menunggu_persetujuan',
+        ]);
+
+        return back()->with('success', 'Penawaran harga berhasil dikirim ke pembeli!');
     }
 
     public function rejectOrder(Order $order)
@@ -180,21 +239,59 @@ class DashboardController extends Controller
     {
         $request->validate(['status' => 'required|in:otw,selesai']);
 
-       
         if ($order->jastiper_id != Auth::id()) {
             abort(403);
         }
 
         $order->update(['status' => $request->status]);
 
-
         // Update total order jastiper jika selesai
         if ($request->status == 'selesai') {
-            \App\Models\User::where('id', Auth::id())->increment('total_order');
+            User::where('id', Auth::id())->increment('total_order');
         }
 
         return back()->with('success', 'Status order diperbarui!');
-    } 
+    }
+
+    public function approvePrice(Order $order)
+    {
+        if ($order->user_id != Auth::id()) {
+            abort(403);
+        }
+
+        if ($order->status !== 'menunggu_persetujuan') {
+            return back()->with('error', 'Harga pesanan ini tidak sedang menunggu persetujuan.');
+        }
+
+        $order->update([
+            'status' => 'proses',
+            'harga_disetujui_at' => now(),
+        ]);
+
+        return back()->with('success', 'Harga disetujui! Pesanan diproses jastiper.');
+    }
+
+    public function rejectPrice(Order $order)
+    {
+        if ($order->user_id != Auth::id()) {
+            abort(403);
+        }
+
+        if ($order->status !== 'menunggu_persetujuan') {
+            return back()->with('error', 'Harga pesanan ini tidak sedang menunggu persetujuan.');
+        }
+
+        $order->update([
+            'jastiper_id' => null,
+            'harga_barang' => null,
+            'ongkos_jastip' => null,
+            'total_bayar' => 0,
+            'catatan_harga' => null,
+            'status' => 'pending',
+        ]);
+
+        return back()->with('info', 'Penawaran ditolak. Pesanan dibuka lagi untuk jastiper lain.');
+    }
 
     // ==========================================
     // ULASAN BINTANG
@@ -206,17 +303,17 @@ class DashboardController extends Controller
             'komentar' => 'nullable|string|max:500',
         ]);
 
-        \App\Models\Rating::create([
-            'order_id'    => $order->id,
-            'user_id'     => \Illuminate\Support\Facades\Auth::id(),
+        Rating::create([
+            'order_id' => $order->id,
+            'user_id' => Auth::id(),
             'jastiper_id' => $order->jastiper_id,
-            'bintang'     => $request->bintang,
-            'komentar'    => $request->komentar,
+            'bintang' => $request->bintang,
+            'komentar' => $request->komentar,
         ]);
 
         $jastiper = $order->jastiper;
         if ($jastiper) {
-            $rataRataRating = \App\Models\Rating::where('jastiper_id', $jastiper->id)->avg('bintang');
+            $rataRataRating = Rating::where('jastiper_id', $jastiper->id)->avg('bintang');
             $jastiper->update(['rating' => $rataRataRating]);
         }
 
@@ -229,10 +326,10 @@ class DashboardController extends Controller
     public function userHistory()
     {
         // Tarik semua pesanan milik user yang sedang login
-        $orders = Order::where('user_id', Auth::id())
-                    ->latest()
-                    ->paginate(10);
-                    
+        $orders = Order::where('uaser_id', Auth::id())
+            ->latest()
+            ->paginate(10);
+
         return view('dashboard.user-history', compact('orders'));
     }
 }

@@ -42,9 +42,10 @@
                     <h2 class="text-lg font-bold text-slate-900 mt-2">Order #{{ $order->id }} <span class="text-slate-400 font-normal">({{ $order->kode_order ?? 'No Code' }})</span></h2>
                 </div>
                 <div class="text-sm sm:text-right">
-                    <p class="text-slate-400 text-xs">Total Budget</p>
-                    <p class="font-extrabold text-slate-900 text-lg">Rp {{ number_format($order->budget, 0, ',', '.') }}</p>
-                </div>
+                    <p class="text-slate-400 text-xs">Total Bayar</p>
+<p class="font-extrabold text-slate-900 text-lg">
+    Rp {{ number_format($order->total_bayar ?: $order->budget, 0, ',', '.') }}
+</p> </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -80,14 +81,67 @@
                     @endif
                 </div>
             </div>
+            @if($order->status === 'menunggu_persetujuan' && $order->user_id == Auth::id())
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6">
+        <h3 class="font-bold text-amber-800 mb-3">💰 Penawaran Harga dari Jastiper</h3>
 
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm mb-4">
+            <div class="bg-white rounded-xl p-3 border border-amber-100">
+                <div class="text-slate-400 text-xs">Harga Barang</div>
+                <div class="font-bold">Rp {{ number_format($order->harga_barang, 0, ',', '.') }}</div>
+            </div>
+
+            <div class="bg-white rounded-xl p-3 border border-amber-100">
+                <div class="text-slate-400 text-xs">Ongkos Jastip</div>
+                <div class="font-bold">Rp {{ number_format($order->ongkos_jastip, 0, ',', '.') }}</div>
+            </div>
+
+            <div class="bg-white rounded-xl p-3 border border-amber-100">
+                <div class="text-slate-400 text-xs">Total Bayar</div>
+                <div class="font-bold text-blue-700">Rp {{ number_format($order->total_bayar, 0, ',', '.') }}</div>
+            </div>
+        </div>
+
+        @if($order->catatan_harga)
+            <p class="text-sm text-amber-700 mb-4">
+                <strong>Catatan:</strong> {{ $order->catatan_harga }}
+            </p>
+        @endif
+
+        <div class="flex flex-col sm:flex-row gap-3">
+            <form method="POST" action="{{ route('order.approve-price', $order->id) }}" class="flex-1">
+                @csrf
+                @method('PATCH')
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm">
+                    ✅ Setujui Harga
+                </button>
+            </form>
+
+            <form method="POST" action="{{ route('order.reject-price', $order->id) }}" class="flex-1">
+                @csrf
+                @method('PATCH')
+                <button type="submit"
+                    class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-xl text-sm border border-red-200">
+                    ❌ Tolak Harga
+                </button>
+            </form>
+        </div>
+    </div>
+@endif
             <div class="border-t border-slate-100 pt-5">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Progres Pengiriman</p>
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+               <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 text-center">
                     <div class="p-3 rounded-xl border {{ $order->status == 'pending' ? 'bg-amber-50 border-amber-200 text-amber-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-400' }} text-xs">⏳ Menunggu</div>
+
+                    <div class="p-3 rounded-xl border {{ $order->status == 'menunggu_persetujuan' ? 'bg-yellow-50 border-yellow-200 text-yellow-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-400' }} text-xs">💰 Persetujuan</div>
+
                     <div class="p-3 rounded-xl border {{ $order->status == 'proses' ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-400' }} text-xs">👨‍🍳 Diproses</div>
+
                     <div class="p-3 rounded-xl border {{ $order->status == 'otw' ? 'bg-purple-50 border-purple-200 text-purple-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-400' }} text-xs">🏍️ Diantar</div>
+
                     <div class="p-3 rounded-xl border {{ $order->status == 'selesai' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-400' }} text-xs">✅ Selesai</div>
+
                     <div class="p-3 rounded-xl border {{ $order->status == 'batal' ? 'bg-rose-50 border-rose-200 text-rose-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-400' }} text-xs">❌ Batal</div>
                 </div>
             </div>
@@ -111,7 +165,7 @@
                         <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
                             <th class="p-4">ID Order</th>
                             <th class="p-4">Nama Barang</th>
-                            <th class="p-4">Budget</th>
+                            <th class="p-4">Total</th>
                             <th class="p-4">Status</th>
                             <th class="p-4 text-right">Aksi</th>
                         </tr>
@@ -125,10 +179,14 @@
                                     <div class="text-slate-800 font-medium">{{ $item->nama_barang ?? $item->judul ?? 'Pesanan Jastip' }}</div>
                                     <div class="text-slate-400 text-xs mt-0.5">{{ $item->created_at->format('d M Y') }} - {{ ucfirst($item->kategori) }}</div>
                                 </td>
-                                <td class="p-4 text-slate-900 font-semibold">Rp {{ number_format($item->budget, 0, ',', '.') }}</td>
+                               <td class="p-4 text-slate-900 font-semibold">
+    Rp {{ number_format($item->total_bayar ?: $item->budget, 0, ',', '.') }}
+</td>
                                 <td class="p-4">
-                                    @if($item->status == 'pending')
+                                   @if($item->status == 'pending')
                                         <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-amber-50 text-amber-700 border border-amber-100">Menunggu</span>
+                                    @elseif($item->status == 'menunggu_persetujuan')
+                                        <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-yellow-50 text-yellow-700 border border-yellow-100">Menunggu Harga</span>
                                     @elseif($item->status == 'proses')
                                         <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700 border border-blue-100">Diproses</span>
                                     @elseif($item->status == 'otw')
