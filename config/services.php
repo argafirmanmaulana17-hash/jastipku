@@ -36,7 +36,7 @@ return [
     ],
 
     'fonnte' => [
-        'token' => env('REMOVED_FONNTE_TOKEN'),
-        'enabled' => env('FONNTE_ENABLED', false),
-    ],
+    'token' => env('FONNTE_TOKEN'),
+    'enabled' => filter_var(env('FONNTE_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+],
 ];
