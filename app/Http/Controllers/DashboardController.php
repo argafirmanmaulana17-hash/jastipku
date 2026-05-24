@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\Rating;
 use App\Models\User;
@@ -107,6 +108,70 @@ class DashboardController extends Controller
     public function adminSettings()
     {
         return view('dashboard.admin-settings');
+    }
+
+    public function adminMenuItems()
+    {
+        $menuItems = MenuItem::latest()->paginate(15);
+        $editMenuItem = null;
+
+        return view('dashboard.admin-menu-items', compact('menuItems', 'editMenuItem'));
+    }
+
+    public function storeMenuItem(Request $request)
+    {
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'toko' => 'nullable|string|max:255',
+            'kategori' => 'required|in:makanan,minuman',
+            'harga' => 'required|numeric|min:500',
+        ]);
+
+        $validated['aktif'] = true;
+
+        MenuItem::create($validated);
+
+        return back()->with('success', 'Menu makanan/minuman berhasil ditambahkan.');
+    }
+
+    public function editMenuItem(MenuItem $menuItem)
+    {
+        $menuItems = MenuItem::latest()->paginate(15);
+        $editMenuItem = $menuItem;
+
+        return view('dashboard.admin-menu-items', compact('menuItems', 'editMenuItem'));
+    }
+
+    public function updateMenuItem(Request $request, MenuItem $menuItem)
+    {
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'toko' => 'nullable|string|max:255',
+            'kategori' => 'required|in:makanan,minuman',
+            'harga' => 'required|numeric|min:500',
+        ]);
+
+        $menuItem->update($validated);
+
+        return redirect()
+            ->route('dashboard.admin.menu-items')
+            ->with('success', 'Menu berhasil diperbarui. Perubahan hanya berlaku untuk order baru.');
+    }
+
+    public function toggleMenuItem(MenuItem $menuItem)
+    {
+        $menuItem->update([
+            'aktif' => ! $menuItem->aktif,
+        ]);
+
+        return back()->with('success', 'Status menu berhasil diperbarui.');
+    }
+
+    public function deleteMenuItem(MenuItem $menuItem)
+    {
+        $menuItem->delete();
+
+        return back()->with('success', 'Menu berhasil dihapus.');
     }
 
     // ==========================================
@@ -325,11 +390,30 @@ class DashboardController extends Controller
     // ==========================================
     public function userHistory()
     {
-        // Tarik semua pesanan milik user yang sedang login
-        $orders = Order::where('uaser_id', Auth::id())
+        $userId = Auth::id();
+
+        $orders = Order::where('user_id', $userId)
             ->latest()
             ->paginate(10);
 
-        return view('dashboard.user-history', compact('orders'));
+        $stats = [
+            'total' => Order::where('user_id', $userId)->count(),
+
+            'active' => Order::where('user_id', $userId)
+                ->whereIn('status', [
+                    'pending',
+                    'menunggu_harga',
+                    'menunggu_persetujuan',
+                    'proses',
+                    'otw',
+                ])
+                ->count(),
+
+            'selesai' => Order::where('user_id', $userId)
+                ->where('status', 'selesai')
+                ->count(),
+        ];
+
+        return view('dashboard.user-history', compact('orders', 'stats'));
     }
 }

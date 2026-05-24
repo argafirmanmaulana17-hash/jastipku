@@ -72,17 +72,18 @@ class OrderController extends Controller
             // Ambil data menu yang dipilih user.
             $menu = MenuItem::findOrFail($validated['menu_item_id']);
 
-            // Ongkos jastip dibuat tetap.
-            // Nanti kalau mau bisa diubah jadi dinamis.
             $ongkosJastip = 3000;
 
-            // Simpan harga otomatis dari price list.
             $validated['jenis_harga'] = 'pricelist';
             $validated['harga_barang'] = $menu->harga;
             $validated['ongkos_jastip'] = $ongkosJastip;
             $validated['total_bayar'] = $menu->harga + $ongkosJastip;
             $validated['budget'] = $menu->harga;
             $validated['catatan_harga'] = 'Harga dari price list makanan/minuman.';
+
+            $validated['nama_item_snapshot'] = $menu->nama;
+            $validated['toko_snapshot'] = $menu->toko;
+            $validated['kategori_item_snapshot'] = $menu->kategori;
         } else {
             // Untuk barang bebas seperti sapu, ember, alat tulis, dll.
             // Harga belum ditentukan di awal.
@@ -94,6 +95,10 @@ class OrderController extends Controller
             $validated['total_bayar'] = 0;
             $validated['budget'] = $validated['budget'] ?? 0;
             $validated['catatan_harga'] = null;
+
+            $validated['nama_item_snapshot'] = $validated['detail_pesanan'];
+            $validated['toko_snapshot'] = $validated['lokasi_ambil'];
+            $validated['kategori_item_snapshot'] = $validated['kategori'];
         }
 
         // Simpan order ke database.

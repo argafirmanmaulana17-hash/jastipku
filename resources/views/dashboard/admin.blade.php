@@ -29,15 +29,16 @@
 
                 <nav class="space-y-1">
                     @foreach([
-                        ['href'=>'/dashboard/admin','icon'=>'📊','label'=>'Overview'],
-                        ['href'=>'/dashboard/admin/orders','icon'=>'📦','label'=>'Semua Order'],
-                        ['href'=>'/dashboard/admin/jastipers','icon'=>'🛵','label'=>'Kelola Jastiper'],
-                        ['href'=>'/dashboard/admin/users','icon'=>'👥','label'=>'Kelola Pembeli'],
-                        ['href'=>'/dashboard/admin/reports','icon'=>'📈','label'=>'Laporan'],
-                        ['href'=>'/dashboard/admin/settings','icon'=>'⚙️','label'=>'Pengaturan'],
+                        ['href' => '/dashboard/admin', 'icon' => '📊', 'label' => 'Overview'],
+                        ['href' => '/dashboard/admin/orders', 'icon' => '📦', 'label' => 'Semua Order'],
+                        ['href' => '/dashboard/admin/jastipers', 'icon' => '🛵', 'label' => 'Kelola Jastiper'],
+                        ['href' => '/dashboard/admin/users', 'icon' => '👥', 'label' => 'Kelola Pembeli'],
+                        ['href' => '/dashboard/admin/menu-items', 'icon' => '🍽️', 'label' => 'Menu Makanan'],
+                        ['href' => '/dashboard/admin/reports', 'icon' => '📈', 'label' => 'Laporan'],
+                        ['href' => '/dashboard/admin/settings', 'icon' => '⚙️', 'label' => 'Pengaturan'],
                     ] as $menu)
                         <a href="{{ $menu['href'] }}"
-                           class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors {{ request()->is(ltrim($menu['href'],'/')) ? 'active' : '' }}">
+                           class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors {{ request()->is(ltrim($menu['href'], '/')) ? 'active' : '' }}">
                             <span>{{ $menu['icon'] }}</span>
                             {{ $menu['label'] }}
                         </a>
@@ -79,10 +80,10 @@
             <!-- Stats Cards -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 @foreach([
-                    ['label'=>'Total Order','value'=>$stats['total_orders'] ?? '0','icon'=>'📦','change'=>'+12%'],
-                    ['label'=>'Order Hari Ini','value'=>$stats['today_orders'] ?? '0','icon'=>'📅','change'=>'+5'],
-                    ['label'=>'Jastiper Aktif','value'=>$stats['active_jastipers'] ?? '0','icon'=>'🛵','change'=>'Online'],
-                    ['label'=>'Total Pendapatan','value'=>'Rp '.number_format($stats['total_revenue'] ?? 0, 0, ',', '.'),'icon'=>'💰','change'=>'+20%'],
+                    ['label' => 'Total Order', 'value' => $stats['total_orders'] ?? '0', 'icon' => '📦', 'change' => '+12%'],
+                    ['label' => 'Order Hari Ini', 'value' => $stats['today_orders'] ?? '0', 'icon' => '📅', 'change' => '+5'],
+                    ['label' => 'Jastiper Aktif', 'value' => $stats['active_jastipers'] ?? '0', 'icon' => '🛵', 'change' => 'Online'],
+                    ['label' => 'Total Pendapatan', 'value' => 'Rp ' . number_format($stats['total_revenue'] ?? 0, 0, ',', '.'), 'icon' => '💰', 'change' => '+20%'],
                 ] as $stat)
                     <div class="stat-card">
                         <div class="flex items-start justify-between mb-3">
@@ -132,12 +133,12 @@
                     </div>
                 </a>
 
-                <a href="/dashboard/admin/reports"
+                <a href="/dashboard/admin/menu-items"
                    class="bg-white border border-slate-200 rounded-2xl p-5 hover:border-blue-300 hover:shadow-md transition">
-                    <div class="text-3xl mb-3">📈</div>
-                    <div class="font-bold text-slate-900">Laporan</div>
+                    <div class="text-3xl mb-3">🍽️</div>
+                    <div class="font-bold text-slate-900">Menu Makanan</div>
                     <div class="text-sm text-slate-500 mt-1">
-                        Lihat rekap dan statistik order.
+                        Tambah makanan/minuman price list.
                     </div>
                 </a>
             </div>
@@ -168,6 +169,32 @@
 
                         <tbody class="divide-y divide-slate-50">
                             @forelse($recentOrders ?? [] as $order)
+                                @php
+                                    switch ($order->status) {
+                                        case 'pending':
+                                            $statusClass = 'badge-pending';
+                                            break;
+                                        case 'menunggu_harga':
+                                            $statusClass = 'bg-amber-50 text-amber-700 border border-amber-100';
+                                            break;
+                                        case 'menunggu_persetujuan':
+                                            $statusClass = 'bg-yellow-50 text-yellow-700 border border-yellow-100';
+                                            break;
+                                        case 'proses':
+                                            $statusClass = 'badge-proses';
+                                            break;
+                                        case 'otw':
+                                            $statusClass = 'badge-otw';
+                                            break;
+                                        case 'selesai':
+                                            $statusClass = 'badge-selesai';
+                                            break;
+                                        default:
+                                            $statusClass = 'badge-batal';
+                                            break;
+                                    }
+                                @endphp
+
                                 <tr class="hover:bg-slate-50 transition-colors">
                                     <td class="px-6 py-4 text-sm font-mono font-semibold text-blue-600">
                                         {{ $order->kode_order }}
@@ -186,14 +213,7 @@
                                     </td>
 
                                     <td class="px-6 py-4">
-                                        <span class="px-3 py-1 rounded-full text-xs font-semibold
-                                            @if($order->status == 'pending') badge-pending
-                                            @elseif($order->status == 'menunggu_harga') bg-amber-50 text-amber-700 border border-amber-100
-                                            @elseif($order->status == 'menunggu_persetujuan') bg-yellow-50 text-yellow-700 border border-yellow-100
-                                            @elseif($order->status == 'proses') badge-proses
-                                            @elseif($order->status == 'otw') badge-otw
-                                            @elseif($order->status == 'selesai') badge-selesai
-                                            @else badge-batal @endif">
+                                        <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
                                             {{ $order->status_label ?? ucfirst(str_replace('_', ' ', $order->status)) }}
                                         </span>
                                     </td>

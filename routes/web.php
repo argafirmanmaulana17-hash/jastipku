@@ -76,6 +76,14 @@ Route::middleware('auth')->group(function () {
             Route::get('/jastipers', [DashboardController::class, 'adminJastipers'])->name('jastipers');
             Route::patch('/jastipers/{jastiper}/toggle', [DashboardController::class, 'toggleJastiper'])->name('jastipers.toggle');
             Route::get('/users', [DashboardController::class, 'adminUsers'])->name('users');
+
+            Route::get('/menu-items', [DashboardController::class, 'adminMenuItems'])->name('menu-items');
+            Route::post('/menu-items', [DashboardController::class, 'storeMenuItem'])->name('menu-items.store');
+            Route::patch('/menu-items/{menuItem}/toggle', [DashboardController::class, 'toggleMenuItem'])->name('menu-items.toggle');
+            Route::delete('/menu-items/{menuItem}', [DashboardController::class, 'deleteMenuItem'])->name('menu-items.delete');
+            Route::get('/menu-items/{menuItem}/edit', [DashboardController::class, 'editMenuItem'])->name('menu-items.edit');
+            Route::patch('/menu-items/{menuItem}', [DashboardController::class, 'updateMenuItem'])->name('menu-items.update');
+
             Route::get('/reports', [DashboardController::class, 'adminReports'])->name('reports');
             Route::get('/settings', [DashboardController::class, 'adminSettings'])->name('settings');
         });
