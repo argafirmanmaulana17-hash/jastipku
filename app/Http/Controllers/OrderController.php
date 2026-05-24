@@ -13,6 +13,11 @@ class OrderController extends Controller
 {
     public function create()
     {
+
+        if (! auth()->user()->whatsapp_verified_at) {
+            return redirect()->route('whatsapp.verify')
+                ->with('error', 'Verifikasi WhatsApp dulu sebelum membuat pesanan.');
+        }
         // Ambil daftar alamat tersimpan milik user yang sedang login.
         // Data ini dipakai untuk dropdown/pilihan alamat di form order.
         $savedAddresses = Address::where('user_id', auth()->id())->get();
@@ -33,28 +38,35 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+
+        if (! Auth::user()->whatsapp_verified_at) {
+            return redirect()->route('whatsapp.verify')
+                ->with('error', 'Verifikasi WhatsApp dulu sebelum membuat pesanan.');
+        }
         // Validasi data dari form order.
-        // menu_item_id hanya dipakai kalau user memilih kategori makanan/minuman dari price list.
-        // budget dibuat nullable karena untuk barang seperti sapu, harga belum ditentukan pembeli.
+        // WhatsApp tidak diambil dari form, tapi dari akun user yang login.
+        // Detail pesanan opsional.
         $validated = $request->validate([
             'nama' => 'required|string|max:100',
-            'whatsapp' => 'required|string|max:20',
             'lokasi_antar' => 'required|string|max:255',
             'kategori' => 'required|string',
             'menu_item_id' => 'nullable|exists:menu_items,id',
             'lokasi_ambil' => 'required|string|max:255',
-            'detail_pesanan' => 'required|string',
+            'detail_pesanan' => 'nullable|string|max:1000',
             'budget' => 'nullable|numeric|min:0',
             'waktu' => 'nullable|string',
             'pembayaran' => 'required|in:dana,cash,transfer',
             'catatan' => 'nullable|string|max:500',
         ]);
 
-        // Buat kode order otomatis, status awal pending,
-        // dan hubungkan order dengan user yang sedang login.
         $validated['kode_order'] = Order::generateKode();
         $validated['status'] = 'pending';
         $validated['user_id'] = Auth::id();
+
+        $user = Auth::user();
+        $validated['whatsapp'] = $user->whatsapp ?? $user->no_hp ?? '';
+
+        $validated['detail_pesanan'] = $validated['detail_pesanan'] ?? '';
 
         // Cek apakah kategori termasuk makanan/minuman.
         // Kalau iya, harga diambil dari price list.

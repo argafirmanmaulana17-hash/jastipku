@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\WhatsappVerificationController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
@@ -38,6 +39,11 @@ Route::middleware('auth')->group(function () {
 
     // Auth
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    // Verifikasi WhatsApp
+    Route::get('/verify-whatsapp', [WhatsappVerificationController::class, 'show'])->name('whatsapp.verify');
+    Route::post('/verify-whatsapp/send', [WhatsappVerificationController::class, 'sendOtp'])->name('whatsapp.send');
+    Route::post('/verify-whatsapp/check', [WhatsappVerificationController::class, 'verify'])->name('whatsapp.check');
 
     // Order (Pesan Jastip)
     Route::get('/order', [OrderController::class, 'create'])->name('order.create');

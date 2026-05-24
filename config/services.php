@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'fonnte' => [
+        'token' => env('REMOVED_FONNTE_TOKEN'),
+        'enabled' => env('FONNTE_ENABLED', false),
+    ],
 ];
