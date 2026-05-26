@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Address;
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -13,44 +14,38 @@ class OrderController extends Controller
 {
     public function create()
     {
-
         if (! auth()->user()->whatsapp_verified_at) {
             return redirect()->route('whatsapp.verify')
                 ->with('error', 'Verifikasi WhatsApp dulu sebelum membuat pesanan.');
         }
-        // Ambil daftar alamat tersimpan milik user yang sedang login.
-        // Data ini dipakai untuk dropdown/pilihan alamat di form order.
+
         $savedAddresses = Address::where('user_id', auth()->id())->get();
 
-        // Ambil daftar menu makanan/minuman yang masih aktif dari price list.
-        // Data ini dipakai saat user memilih kategori makanan/minuman.
         $menuItems = MenuItem::where('aktif', true)
             ->orderBy('toko')
             ->orderBy('nama')
             ->get();
 
-        // Kirim data alamat dan price list ke halaman form order.
-        // Nanti di order/create.blade.php kita bisa pakai:
-        // $savedAddresses untuk alamat
-        // $menuItems untuk pilihan makanan/minuman
         return view('order.create', compact('savedAddresses', 'menuItems'));
     }
 
     public function store(Request $request)
     {
-
         if (! Auth::user()->whatsapp_verified_at) {
             return redirect()->route('whatsapp.verify')
                 ->with('error', 'Verifikasi WhatsApp dulu sebelum membuat pesanan.');
         }
-        // Validasi data dari form order.
-        // WhatsApp tidak diambil dari form, tapi dari akun user yang login.
-        // Detail pesanan opsional.
+
         $validated = $request->validate([
             'nama' => 'required|string|max:100',
             'lokasi_antar' => 'required|string|max:255',
             'kategori' => 'required|string',
+
             'menu_item_id' => 'nullable|exists:menu_items,id',
+            'menu_items' => 'nullable|array',
+            'menu_items.*.id' => 'nullable|exists:menu_items,id',
+            'menu_items.*.qty' => 'nullable|integer|min:0|max:99',
+
             'lokasi_ambil' => 'required|string|max:255',
             'detail_pesanan' => 'nullable|string|max:1000',
             'budget' => 'nullable|numeric|min:0',
@@ -65,41 +60,88 @@ class OrderController extends Controller
 
         $user = Auth::user();
         $validated['whatsapp'] = $user->whatsapp ?? $user->no_hp ?? '';
-
         $validated['detail_pesanan'] = $validated['detail_pesanan'] ?? '';
 
-        // Cek apakah kategori termasuk makanan/minuman.
-        // Kalau iya, harga diambil dari price list.
         $kategori = strtolower($validated['kategori']);
         $isPriceList = str_contains($kategori, 'makanan') || str_contains($kategori, 'minuman');
 
         if ($isPriceList) {
-            // Untuk makanan/minuman, user wajib memilih menu dari price list.
-            if (empty($validated['menu_item_id'])) {
+            $selectedItems = collect($request->input('menu_items', []))
+                ->filter(function ($item) {
+                    return ! empty($item['id']) && isset($item['qty']) && (int) $item['qty'] > 0;
+                });
+
+            if ($selectedItems->isEmpty()) {
                 return back()
-                    ->withErrors(['menu_item_id' => 'Untuk makanan/minuman, pilih menu dari price list.'])
+                    ->withErrors(['menu_items' => 'Pilih minimal satu menu makanan/minuman.'])
                     ->withInput();
             }
 
-            // Ambil data menu yang dipilih user.
-            $menu = MenuItem::findOrFail($validated['menu_item_id']);
+            $menuIds = $selectedItems->pluck('id')->toArray();
+
+            $menus = MenuItem::whereIn('id', $menuIds)
+                ->where('aktif', true)
+                ->get()
+                ->keyBy('id');
+
+            $totalBarang = 0;
+            $snapshotNames = [];
+            $snapshotToko = null;
+            $snapshotKategori = 'makanan';
+
+            foreach ($selectedItems as $item) {
+                $menu = $menus->get((int) $item['id']);
+
+                if (! $menu) {
+                    return back()
+                        ->withErrors(['menu_items' => 'Ada menu yang tidak valid atau sudah nonaktif.'])
+                        ->withInput();
+                }
+
+                $qty = max(1, (int) $item['qty']);
+                $subtotal = $menu->harga * $qty;
+
+                $totalBarang += $subtotal;
+                $snapshotNames[] = $menu->nama.' x'.$qty;
+
+                if (! $snapshotToko && $menu->toko) {
+                    $snapshotToko = $menu->toko;
+                }
+            }
 
             $ongkosJastip = 3000;
 
             $validated['jenis_harga'] = 'pricelist';
-            $validated['harga_barang'] = $menu->harga;
+            $validated['menu_item_id'] = null;
+            $validated['harga_barang'] = $totalBarang;
             $validated['ongkos_jastip'] = $ongkosJastip;
-            $validated['total_bayar'] = $menu->harga + $ongkosJastip;
-            $validated['budget'] = $menu->harga;
+            $validated['total_bayar'] = $totalBarang + $ongkosJastip;
+            $validated['budget'] = $totalBarang;
             $validated['catatan_harga'] = 'Harga dari price list makanan/minuman.';
 
-            $validated['nama_item_snapshot'] = $menu->nama;
-            $validated['toko_snapshot'] = $menu->toko;
-            $validated['kategori_item_snapshot'] = $menu->kategori;
+            $validated['nama_item_snapshot'] = implode(', ', $snapshotNames);
+            $validated['toko_snapshot'] = $snapshotToko;
+            $validated['kategori_item_snapshot'] = $snapshotKategori;
+            $validated['lokasi_ambil'] = $snapshotToko ?: $validated['lokasi_ambil'];
+
+            $order = Order::create($validated);
+
+            foreach ($selectedItems as $item) {
+                $menu = $menus->get((int) $item['id']);
+                $qty = max(1, (int) $item['qty']);
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'menu_item_id' => $menu->id,
+                    'nama_item' => $menu->nama,
+                    'toko' => $menu->toko,
+                    'kategori' => $menu->kategori,
+                    'qty' => $qty,
+                    'harga_satuan' => $menu->harga,
+                    'subtotal' => $menu->harga * $qty,
+                ]);
+            }
         } else {
-            // Untuk barang bebas seperti sapu, ember, alat tulis, dll.
-            // Harga belum ditentukan di awal.
-            // Nanti jastiper yang mengajukan harga barang + ongkos jastip.
             $validated['jenis_harga'] = 'penawaran';
             $validated['menu_item_id'] = null;
             $validated['harga_barang'] = null;
@@ -108,16 +150,13 @@ class OrderController extends Controller
             $validated['budget'] = $validated['budget'] ?? 0;
             $validated['catatan_harga'] = null;
 
-            $validated['nama_item_snapshot'] = $validated['detail_pesanan'];
+            $validated['nama_item_snapshot'] = $validated['detail_pesanan'] ?: 'Pesanan request';
             $validated['toko_snapshot'] = $validated['lokasi_ambil'];
             $validated['kategori_item_snapshot'] = $validated['kategori'];
+
+            $order = Order::create($validated);
         }
 
-        // Simpan order ke database.
-        $order = Order::create($validated);
-
-        // Jika user menulis label alamat baru di form order,
-        // otomatis simpan alamat tersebut ke buku alamat user.
         if ($request->has('label_alamat_baru') && $request->label_alamat_baru != null) {
             Address::create([
                 'user_id' => auth()->id(),

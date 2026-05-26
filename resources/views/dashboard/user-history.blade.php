@@ -125,12 +125,37 @@
                                         </td>
 
                                         <td class="px-6 py-4">
-                                            <div class="font-semibold text-slate-900">
-                                                {{ $order->nama_item_snapshot ?? ($order->nama_barang ?? ($order->judul ?? ($order->detail_pesanan ?? 'Pesanan Jastip'))) }}
-                                            </div>
+                                            @if ($order->items && $order->items->count() > 0)
+                                                <div class="space-y-1">
+                                                    @foreach ($order->items as $item)
+                                                        <div class="flex items-center justify-between gap-3 text-sm">
+                                                            <span class="text-slate-800">
+                                                                {{ $item->nama_item }} x{{ $item->qty }}
+                                                            </span>
+                                                            <span class="font-semibold text-slate-900 whitespace-nowrap">
+                                                                Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+                                                            </span>
+                                                        </div>
+                                                    @endforeach
+
+                                                    @if ($order->ongkos_jastip)
+                                                        <div
+                                                            class="flex items-center justify-between gap-3 text-xs text-slate-500 pt-1 border-t border-slate-100">
+                                                            <span>Ongkos Jastip</span>
+                                                            <span class="font-semibold whitespace-nowrap">
+                                                                Rp {{ number_format($order->ongkos_jastip, 0, ',', '.') }}
+                                                            </span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <div class="font-semibold text-slate-900">
+                                                    {{ $order->nama_item_snapshot ?? ($order->nama_barang ?? ($order->judul ?? ($order->detail_pesanan ?? 'Pesanan Jastip'))) }}
+                                                </div>
+                                            @endif
 
                                             @if ($order->toko_snapshot)
-                                                <div class="text-xs text-slate-400 mt-1">
+                                                <div class="text-xs text-slate-400 mt-2">
                                                     Toko/Kantin: {{ $order->toko_snapshot }}
                                                 </div>
                                             @endif

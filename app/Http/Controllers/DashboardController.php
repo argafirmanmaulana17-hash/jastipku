@@ -392,7 +392,8 @@ class DashboardController extends Controller
     {
         $userId = Auth::id();
 
-        $orders = Order::where('user_id', $userId)
+        $orders = Order::with('items')
+            ->where('user_id', $userId)
             ->latest()
             ->paginate(10);
 

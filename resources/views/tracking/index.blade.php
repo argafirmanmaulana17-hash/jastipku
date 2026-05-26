@@ -76,9 +76,37 @@
                             Detail Barang
                         </p>
 
-                        <p class="font-bold text-slate-800 text-sm">
-                            {{ $order->nama_item_snapshot ?? ($order->nama_barang ?? ($order->judul ?? ($order->detail_pesanan ?? 'Pesanan Jastip'))) }}
-                        </p>
+                        @if ($order->items && $order->items->count() > 0)
+                            <div class="space-y-2">
+                                @foreach ($order->items as $detail)
+                                    <div
+                                        class="flex justify-between gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs">
+                                        <span class="text-slate-700">
+                                            {{ $detail->nama_item }} x{{ $detail->qty }}
+                                        </span>
+                                        <span class="font-bold text-slate-900 whitespace-nowrap">
+                                            Rp {{ number_format($detail->subtotal, 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                @endforeach
+
+                                @if ($order->ongkos_jastip)
+                                    <div
+                                        class="flex justify-between gap-3 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs">
+                                        <span class="text-blue-700">
+                                            Ongkos Jastip
+                                        </span>
+                                        <span class="font-bold text-blue-700 whitespace-nowrap">
+                                            Rp {{ number_format($order->ongkos_jastip, 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                        @else
+                            <p class="font-bold text-slate-800 text-sm">
+                                {{ $order->nama_item_snapshot ?? ($order->nama_barang ?? ($order->judul ?? ($order->detail_pesanan ?? 'Pesanan Jastip'))) }}
+                            </p>
+                        @endif
 
                         <p class="text-xs text-slate-500 mt-0.5">
                             Kategori: {{ ucfirst($order->kategori_item_snapshot ?? $order->kategori) }}
@@ -273,9 +301,34 @@
                                     </td>
 
                                     <td class="p-4">
-                                        <div class="text-slate-800 font-medium">
-                                            {{ $item->nama_item_snapshot ?? ($item->nama_barang ?? ($item->judul ?? ($item->detail_pesanan ?? 'Pesanan Jastip'))) }}
-                                        </div>
+                                        @if ($item->items && $item->items->count() > 0)
+                                            <div class="space-y-1">
+                                                @foreach ($item->items as $detail)
+                                                    <div class="flex justify-between gap-3 text-slate-800">
+                                                        <span>
+                                                            {{ $detail->nama_item }} x{{ $detail->qty }}
+                                                        </span>
+                                                        <span class="font-semibold whitespace-nowrap">
+                                                            Rp {{ number_format($detail->subtotal, 0, ',', '.') }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+
+                                                @if ($item->ongkos_jastip)
+                                                    <div
+                                                        class="flex justify-between gap-3 text-slate-400 text-xs pt-1 border-t border-slate-100">
+                                                        <span>Ongkos Jastip</span>
+                                                        <span class="font-semibold whitespace-nowrap">
+                                                            Rp {{ number_format($item->ongkos_jastip, 0, ',', '.') }}
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div class="text-slate-800 font-medium">
+                                                {{ $item->nama_item_snapshot ?? ($item->nama_barang ?? ($item->judul ?? ($item->detail_pesanan ?? 'Pesanan Jastip'))) }}
+                                            </div>
+                                        @endif
 
                                         <div class="text-slate-400 text-xs mt-0.5">
                                             {{ $item->created_at->format('d M Y') }} -
