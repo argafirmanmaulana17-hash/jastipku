@@ -139,4 +139,14 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function priceOffers()
+    {
+        return $this->hasMany(OrderPriceOffer::class);
+    }
+
+    public function latestPriceOffer()
+    {
+        return $this->hasOne(OrderPriceOffer::class)->latestOfMany();
+    }
 }

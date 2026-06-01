@@ -49,6 +49,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/order', [OrderController::class, 'create'])->name('order.create');
     Route::post('/order', [OrderController::class, 'store'])->name('order.store');
 
+    Route::post('/orders/{order}/price-offers', [ChatController::class, 'storePriceOffer'])
+        ->name('orders.price-offers.store');
+
+    Route::patch('/orders/{order}/price-offers/{offer}/accept', [ChatController::class, 'acceptPriceOffer'])
+        ->name('orders.price-offers.accept');
+
+    Route::patch('/orders/{order}/price-offers/{offer}/reject', [ChatController::class, 'rejectPriceOffer'])
+        ->name('orders.price-offers.reject');
+
     // Tracking
     Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking');
 
@@ -64,6 +73,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/chat/{order}', [ChatController::class, 'show'])->name('chat.show');
     Route::post('/chat/{order}', [ChatController::class, 'store'])->name('chat.store');
     Route::get('/chat/{order}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
+    Route::get('/chat/{order}/state', [ChatController::class, 'getState'])->name('chat.state');
 
     // =============================================
     // DASHBOARD ROUTES
