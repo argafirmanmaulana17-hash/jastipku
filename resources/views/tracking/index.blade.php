@@ -153,15 +153,25 @@
                         </div>
 
                         @if ($order->jastiper)
-                            <a href="{{ route('chat.show', $order->id) }}"
-                                class="mt-4 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-3 rounded-xl transition-colors shadow-sm">
-                                💬 Chat Live ke Jastiper
-                            </a>
+                            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <a href="{{ route('chat.show', $order->id) }}"
+                                    class="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-3 rounded-xl transition-colors shadow-sm">
+                                    💬 Chat Live
+                                </a>
+
+                                @if ($order->jastiper->whatsapp_url)
+                                    <a href="{{ $order->jastiper->whatsapp_url }}?text={{ urlencode('Halo, saya ingin menanyakan pesanan ' . ($order->kode_order ?? '#' . $order->id)) }}"
+                                        target="_blank"
+                                        class="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-4 py-3 rounded-xl transition-colors shadow-sm">
+                                        🟢 WhatsApp Jastiper
+                                    </a>
+                                @endif
+                            </div>
                         @endif
                     </div>
                 </div>
 
-                @if ($order->status === 'menunggu_persetujuan' && $order->user_id == Auth::id())
+                @if ($order->status === 'menunggu_persetujuan' && $order->user_id == auth()->id())
                     <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6">
                         <h3 class="font-bold text-amber-800 mb-3">
                             💰 Penawaran Harga dari Jastiper

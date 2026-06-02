@@ -308,21 +308,25 @@
                                         </form>
                                     @endif
 
-                                    <a href="https://wa.me/62{{ ltrim($order->whatsapp, '0') }}" target="_blank"
-                                        class="bg-green-50 text-green-600 font-semibold px-4 py-2 rounded-xl hover:bg-green-100 transition-colors text-sm border border-green-200">
-                                        💬 WA
-                                    </a>
+                                    <div class="flex flex-wrap gap-2">
+                                        <a href="{{ route('chat.show', $order->id) }}"
+                                            class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold border border-blue-100 hover:bg-blue-100 transition">
+                                            💬 Chat Live
+                                        </a>
 
-                                    <a href="{{ route('chat.show', $order->id) }}"
-                                        class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors text-sm border border-blue-200">
-                                        💬 Chat Pembeli
-                                    </a>
+                                        @if ($order->user && $order->user->whatsapp_url)
+                                            <a href="{{ $order->user->whatsapp_url }}?text={{ urlencode('Halo ' . $order->user->name . ', saya jastiper untuk pesanan ' . ($order->kode_order ?? '#' . $order->id)) }}"
+                                                target="_blank"
+                                                class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-green-50 text-green-700 text-xs font-bold border border-green-100 hover:bg-green-100 transition">
+                                                🟢 WA Pembeli
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
-                            </div>
-                        @empty
-                            <div class="p-12 text-center text-slate-400 text-sm">
-                                Tidak ada order aktif saat ini
-                            </div>
+                            @empty
+                                <div class="p-12 text-center text-slate-400 text-sm">
+                                    Tidak ada order aktif saat ini
+                                </div>
                         @endforelse
                     </div>
                 </div>

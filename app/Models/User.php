@@ -101,4 +101,25 @@ class User extends Authenticatable
     {
         return $this->hasMany(Address::class);
     }
+
+    public function getWhatsappUrlAttribute()
+    {
+        $number = $this->whatsapp ?? $this->no_hp ?? null;
+
+        if (! $number) {
+            return null;
+        }
+
+        $number = preg_replace('/[^0-9]/', '', $number);
+
+        if (str_starts_with($number, '0')) {
+            $number = '62'.substr($number, 1);
+        }
+
+        if (! str_starts_with($number, '62')) {
+            $number = '62'.$number;
+        }
+
+        return 'https://wa.me/'.$number;
+    }
 }

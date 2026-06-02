@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    // Redirect ke dashboard sesuai role
     public function redirect()
     {
         $user = Auth::user();
@@ -40,7 +39,7 @@ class DashboardController extends Controller
             'total_revenue' => Order::selesai()->sum('total_bayar'),
         ];
 
-        $recentOrders = Order::with('jastiper')->latest()->take(10)->get();
+        $recentOrders = Order::with(['user', 'jastiper'])->latest()->take(10)->get();
         $activeJastipers = User::activeJastipers()->withCount(['jastiperOrders as orders_count'])->get();
 
         return view('dashboard.admin', compact('stats', 'recentOrders', 'activeJastipers'));
@@ -55,7 +54,7 @@ class DashboardController extends Controller
 
     public function adminOrderDetail(Order $order)
     {
-        $order->load(['user', 'jastiper', 'rating']);
+        $order->load(['user', 'jastiper', 'rating', 'items']);
         $jastipers = User::activeJastipers()->get();
 
         return view('dashboard.admin-order-detail', compact('order', 'jastipers'));
@@ -63,15 +62,23 @@ class DashboardController extends Controller
 
     public function updateOrderStatus(Request $request, Order $order)
     {
-        $$request->validate(['status' => 'required|in:pending,menunggu_harga,menunggu_persetujuan,proses,otw,selesai,batal']);
-        $order->update(['status' => $request->status]);
+        $request->validate([
+            'status' => 'required|in:pending,menunggu_harga,menunggu_persetujuan,proses,otw,selesai,batal',
+        ]);
+
+        $order->update([
+            'status' => $request->status,
+        ]);
 
         return back()->with('success', 'Status order berhasil diupdate!');
     }
 
     public function adminJastipers()
     {
-        $jastipers = User::jastipers()->withCount(['jastiperOrders as orders_count'])->latest()->paginate(20);
+        $jastipers = User::jastipers()
+            ->withCount(['jastiperOrders as orders_count'])
+            ->latest()
+            ->paginate(20);
 
         return view('dashboard.admin-jastipers', compact('jastipers'));
     }
@@ -79,7 +86,10 @@ class DashboardController extends Controller
     public function toggleJastiper(User $jastiper)
     {
         $newStatus = $jastiper->status == 'aktif' ? 'offline' : 'aktif';
-        $jastiper->update(['status' => $newStatus]);
+
+        $jastiper->update([
+            'status' => $newStatus,
+        ]);
 
         return back()->with('success', 'Status jastiper diperbarui!');
     }
@@ -193,18 +203,25 @@ class DashboardController extends Controller
                 ->sum('ongkos_jastip'),
         ];
 
-        $pendingOrders = Order::where('status', 'pending')
+        $pendingOrders = Order::with(['user', 'items'])
+            ->where('status', 'pending')
             ->whereNull('jastiper_id')
             ->latest()
             ->get();
-        $activeOrders = Order::where('jastiper_id', $user->id)->active()->latest()->get();
+
+        $activeOrders = Order::with(['user', 'items'])
+            ->where('jastiper_id', $user->id)
+            ->active()
+            ->latest()
+            ->get();
 
         return view('dashboard.jastiper', compact('jastiper', 'stats', 'pendingOrders', 'activeOrders'));
     }
 
     public function jastiperOrders()
     {
-        $orders = Order::where('status', 'pending')
+        $orders = Order::with(['user', 'items'])
+            ->where('status', 'pending')
             ->whereNull('jastiper_id')
             ->latest()
             ->paginate(15);
@@ -214,14 +231,22 @@ class DashboardController extends Controller
 
     public function jastiperHistory()
     {
-        $orders = Order::where('jastiper_id', Auth::id())->latest()->paginate(15);
+        $orders = Order::with(['user', 'items'])
+            ->where('jastiper_id', Auth::id())
+            ->latest()
+            ->paginate(15);
 
         return view('dashboard.jastiper-history', compact('orders'));
     }
 
     public function jastiperEarnings()
     {
-        $orders = Order::where('jastiper_id', Auth::id())->selesai()->latest()->get();
+        $orders = Order::with(['user', 'items'])
+            ->where('jastiper_id', Auth::id())
+            ->selesai()
+            ->latest()
+            ->get();
+
         $totalEarnings = $orders->sum('ongkos_jastip');
 
         return view('dashboard.jastiper-earnings', compact('orders', 'totalEarnings'));
@@ -238,7 +263,10 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $newStatus = $user->status == 'aktif' ? 'offline' : 'aktif';
-        User::where('id', Auth::id())->update(['status' => $newStatus]);
+
+        User::where('id', Auth::id())->update([
+            'status' => $newStatus,
+        ]);
 
         return back()->with('success', 'Status berhasil diubah ke '.$newStatus);
     }
@@ -296,21 +324,23 @@ class DashboardController extends Controller
 
     public function rejectOrder(Order $order)
     {
-        // Hanya abaikan (tidak assign ke jastiper ini)
         return back()->with('info', 'Order dilewati.');
     }
 
     public function jastiperUpdateStatus(Request $request, Order $order)
     {
-        $request->validate(['status' => 'required|in:otw,selesai']);
+        $request->validate([
+            'status' => 'required|in:otw,selesai',
+        ]);
 
         if ($order->jastiper_id != Auth::id()) {
             abort(403);
         }
 
-        $order->update(['status' => $request->status]);
+        $order->update([
+            'status' => $request->status,
+        ]);
 
-        // Update total order jastiper jika selesai
         if ($request->status == 'selesai') {
             User::where('id', Auth::id())->increment('total_order');
         }
@@ -361,6 +391,7 @@ class DashboardController extends Controller
     // ==========================================
     // ULASAN BINTANG
     // ==========================================
+
     public function storeRating(Request $request, Order $order)
     {
         $request->validate([
@@ -377,9 +408,13 @@ class DashboardController extends Controller
         ]);
 
         $jastiper = $order->jastiper;
+
         if ($jastiper) {
             $rataRataRating = Rating::where('jastiper_id', $jastiper->id)->avg('bintang');
-            $jastiper->update(['rating' => $rataRataRating]);
+
+            $jastiper->update([
+                'rating' => $rataRataRating,
+            ]);
         }
 
         return back()->with('success', 'Terima kasih! Ulasan bintang berhasil dikirim.');
@@ -388,11 +423,12 @@ class DashboardController extends Controller
     // ==========================================
     // PELANGGAN / USER DASHBOARD
     // ==========================================
+
     public function userHistory()
     {
         $userId = Auth::id();
 
-        $orders = Order::with('items')
+        $orders = Order::with(['items', 'jastiper'])
             ->where('user_id', $userId)
             ->latest()
             ->paginate(10);
