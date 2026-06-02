@@ -151,7 +151,7 @@ class Order extends Model
     }
 
     public function jastiperBill()
-{
-    return $this->hasOne(JastiperBill::class);
-}
+    {
+        return $this->hasOne(JastiperBill::class);
+    }
 }

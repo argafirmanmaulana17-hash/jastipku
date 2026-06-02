@@ -130,9 +130,9 @@
                         </div>
                     </a>
                     <a href="{{ route('dashboard.admin.jastiper-bills') }}"
-    class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-bold border border-red-100 hover:bg-red-100">
-    💳 Tagihan Jastiper
-</a>
+                        class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-red-50 text-red-600 text-sm font-bold border border-red-100 hover:bg-red-100">
+                        💳 Tagihan Jastiper
+                    </a>
                 </div>
 
                 <!-- Recent Orders -->

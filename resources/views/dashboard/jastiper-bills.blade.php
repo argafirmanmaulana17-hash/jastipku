@@ -80,11 +80,13 @@
 
                                     <td class="px-5 py-4">
                                         @if ($bill->status === 'paid')
-                                            <span class="px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-100">
+                                            <span
+                                                class="px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-100">
                                                 Sudah Dibayar
                                             </span>
                                         @else
-                                            <span class="px-3 py-1 rounded-full bg-red-50 text-red-700 text-xs font-bold border border-red-100">
+                                            <span
+                                                class="px-3 py-1 rounded-full bg-red-50 text-red-700 text-xs font-bold border border-red-100">
                                                 Belum Dibayar
                                             </span>
                                         @endif
