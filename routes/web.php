@@ -9,6 +9,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\TrackingController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\JastiperBillController;
 
 // =============================================
 // PUBLIC ROUTES (Bebas diakses siapa saja)
@@ -57,6 +58,16 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/orders/{order}/price-offers/{offer}/reject', [ChatController::class, 'rejectPriceOffer'])
         ->name('orders.price-offers.reject');
+
+        //tagihan jastiper
+        Route::get('/dashboard/jastiper/tagihan', [JastiperBillController::class, 'jastiperIndex'])
+    ->name('dashboard.jastiper.bills');
+
+Route::get('/dashboard/admin/tagihan-jastiper', [JastiperBillController::class, 'adminIndex'])
+    ->name('dashboard.admin.jastiper-bills');
+
+Route::patch('/dashboard/admin/tagihan-jastiper/{bill}/paid', [JastiperBillController::class, 'markPaid'])
+    ->name('dashboard.admin.jastiper-bills.paid');
 
     // Tracking
     Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking');

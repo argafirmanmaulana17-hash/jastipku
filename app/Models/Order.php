@@ -149,4 +149,9 @@ class Order extends Model
     {
         return $this->hasOne(OrderPriceOffer::class)->latestOfMany();
     }
+
+    public function jastiperBill()
+{
+    return $this->hasOne(JastiperBill::class);
+}
 }
