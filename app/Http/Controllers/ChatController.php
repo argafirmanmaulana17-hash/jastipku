@@ -8,14 +8,22 @@ use App\Models\OrderPriceOffer;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ChatController extends Controller
 {
+    private function ensureCanAccessOrder(Order $order): void
+    {
+        $userId = (int) Auth::id();
+
+        if ((int) $order->user_id !== $userId && (int) $order->jastiper_id !== $userId) {
+            abort(403, 'Kamu tidak punya akses ke order ini.');
+        }
+    }
+
     public function show(Order $order)
     {
-        if (Auth::id() != $order->user_id && Auth::id() != $order->jastiper_id) {
-            abort(403, 'Akses Ditolak: Ini bukan pesanan Anda.');
-        }
+        $this->ensureCanAccessOrder($order);
 
         $order->load(['user', 'jastiper', 'priceOffers.sender']);
 
@@ -24,7 +32,7 @@ class ChatController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        $lawanBicara = Auth::id() == $order->user_id
+        $lawanBicara = (int) Auth::id() === (int) $order->user_id
             ? ($order->jastiper->name ?? 'Jastiper')
             : ($order->user->name ?? 'Customer');
 
@@ -33,9 +41,7 @@ class ChatController extends Controller
 
     public function store(Request $request, Order $order)
     {
-        if (Auth::id() != $order->user_id && Auth::id() != $order->jastiper_id) {
-            abort(403);
-        }
+        $this->ensureCanAccessOrder($order);
 
         $request->validate([
             'message' => 'required|string|max:1000',
@@ -56,7 +62,9 @@ class ChatController extends Controller
 
     public function getMessages(Request $request, Order $order)
     {
-        if (Auth::id() != $order->user_id && Auth::id() != $order->jastiper_id) {
+        try {
+            $this->ensureCanAccessOrder($order);
+        } catch (HttpException $e) {
             return response()->json([], 403);
         }
 
@@ -70,7 +78,7 @@ class ChatController extends Controller
                 return [
                     'id' => $chat->id,
                     'message' => $chat->message,
-                    'is_me' => $chat->sender_id == Auth::id(),
+                    'is_me' => (int) $chat->sender_id === (int) Auth::id(),
                     'time' => $chat->created_at->format('H:i'),
                 ];
             });
@@ -78,13 +86,37 @@ class ChatController extends Controller
         return response()->json($chats);
     }
 
+    public function getState(Order $order)
+    {
+        try {
+            $this->ensureCanAccessOrder($order);
+        } catch (HttpException $e) {
+            return response()->json([], 403);
+        }
+
+        $freshOrder = $order->fresh();
+
+        $offers = $order->priceOffers()
+            ->select('id', 'status', 'updated_at')
+            ->orderBy('id')
+            ->get();
+
+        $offerSignature = $offers->map(function ($offer) {
+            return $offer->id.'-'.$offer->status.'-'.optional($offer->updated_at)->timestamp;
+        })->implode('|');
+
+        return response()->json([
+            'order_status' => $freshOrder->status,
+            'order_updated_at' => optional($freshOrder->updated_at)->timestamp,
+            'offer_signature' => $offerSignature,
+        ]);
+    }
+
     public function storePriceOffer(Request $request, Order $order)
     {
-        $user = Auth::user();
+        $this->ensureCanAccessOrder($order);
 
-        if ($order->user_id !== $user->id && $order->jastiper_id !== $user->id) {
-            abort(403);
-        }
+        $user = Auth::user();
 
         $validated = $request->validate([
             'harga_barang' => 'required|numeric|min:0',
@@ -92,7 +124,7 @@ class ChatController extends Controller
             'catatan' => 'nullable|string|max:500',
         ]);
 
-        $total = $validated['harga_barang'] + $validated['ongkos_jastip'];
+        $total = (int) $validated['harga_barang'] + (int) $validated['ongkos_jastip'];
 
         OrderPriceOffer::where('order_id', $order->id)
             ->where('status', 'pending')
@@ -120,10 +152,11 @@ class ChatController extends Controller
         Chat::create([
             'order_id' => $order->id,
             'sender_id' => $user->id,
-            'message' => "💰 Mengajukan penawaran harga:\nHarga barang: Rp ".number_format($validated['harga_barang'], 0, ',', '.').
-                "\nOngkos jastip: Rp ".number_format($validated['ongkos_jastip'], 0, ',', '.').
-                "\nTotal: Rp ".number_format($total, 0, ',', '.').
-                ($validated['catatan'] ? "\nCatatan: {$validated['catatan']}" : ''),
+            'message' => "💰 Mengajukan penawaran harga:\n"
+                .'Harga barang: Rp '.number_format($validated['harga_barang'], 0, ',', '.')."\n"
+                .'Ongkos jastip: Rp '.number_format($validated['ongkos_jastip'], 0, ',', '.')."\n"
+                .'Total: Rp '.number_format($total, 0, ',', '.')
+                .(! empty($validated['catatan']) ? "\nCatatan: {$validated['catatan']}" : ''),
         ]);
 
         return back()->with('success', 'Penawaran harga berhasil dikirim.');
@@ -131,17 +164,15 @@ class ChatController extends Controller
 
     public function acceptPriceOffer(Order $order, OrderPriceOffer $offer)
     {
+        $this->ensureCanAccessOrder($order);
+
         $user = Auth::user();
 
-        if ($order->user_id !== $user->id && $order->jastiper_id !== $user->id) {
-            abort(403);
-        }
-
-        if ($offer->order_id !== $order->id) {
+        if ((int) $offer->order_id !== (int) $order->id) {
             abort(404);
         }
 
-        if ($offer->sender_id === $user->id) {
+        if ((int) $offer->sender_id === (int) $user->id) {
             return back()->withErrors([
                 'offer' => 'Kamu tidak bisa menyetujui penawaran yang kamu buat sendiri.',
             ]);
@@ -182,17 +213,15 @@ class ChatController extends Controller
 
     public function rejectPriceOffer(Order $order, OrderPriceOffer $offer)
     {
+        $this->ensureCanAccessOrder($order);
+
         $user = Auth::user();
 
-        if ($order->user_id !== $user->id && $order->jastiper_id !== $user->id) {
-            abort(403);
-        }
-
-        if ($offer->order_id !== $order->id) {
+        if ((int) $offer->order_id !== (int) $order->id) {
             abort(404);
         }
 
-        if ($offer->sender_id === $user->id) {
+        if ((int) $offer->sender_id === (int) $user->id) {
             return back()->withErrors([
                 'offer' => 'Kamu tidak bisa menolak penawaran yang kamu buat sendiri.',
             ]);
@@ -219,29 +248,5 @@ class ChatController extends Controller
         ]);
 
         return back()->with('success', 'Penawaran harga ditolak. Silakan ajukan harga baru.');
-    }
-
-    public function getState(Order $order)
-    {
-        if (Auth::id() != $order->user_id && Auth::id() != $order->jastiper_id) {
-            return response()->json([], 403);
-        }
-
-        $freshOrder = $order->fresh();
-
-        $offers = $order->priceOffers()
-            ->select('id', 'status', 'updated_at')
-            ->orderBy('id')
-            ->get();
-
-        $offerSignature = $offers->map(function ($offer) {
-            return $offer->id.'-'.$offer->status.'-'.optional($offer->updated_at)->timestamp;
-        })->implode('|');
-
-        return response()->json([
-            'order_status' => $freshOrder->status,
-            'order_updated_at' => optional($freshOrder->updated_at)->timestamp,
-            'offer_signature' => $offerSignature,
-        ]);
     }
 }
