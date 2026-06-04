@@ -17,10 +17,14 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
+        $request->merge([
+            'whatsapp' => $this->normalizeWhatsapp($request->whatsapp),
+        ]);
+
         $rules = [
             'name' => 'required|string|max:100',
             'email' => 'required|email|unique:users,email',
-            'whatsapp' => 'required|string|max:20',
+            'whatsapp' => 'required|string|max:20|unique:users,whatsapp',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:user,jastiper',
             'agree' => 'accepted',
@@ -31,29 +35,39 @@ class RegisterController extends Controller
             $rules['kendaraan'] = 'required|in:motor,sepeda,jalan';
         }
 
-        $validated = $request->validate($rules);
-
-        $whatsapp = preg_replace('/[^0-9]/', '', $validated['whatsapp']);
-
-        if (str_starts_with($whatsapp, '62')) {
-            $whatsapp = '0'.substr($whatsapp, 2);
-        }
+        $validated = $request->validate($rules, [
+            'whatsapp.unique' => 'Nomor WhatsApp ini sudah terdaftar. Silakan gunakan nomor lain atau login ke akun lama.',
+        ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'whatsapp' => $whatsapp,
+            'whatsapp' => $validated['whatsapp'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'area_layanan' => $validated['area_layanan'] ?? null,
             'kendaraan' => $validated['kendaraan'] ?? null,
             'status' => 'offline',
-            'whatsapp_verified_at' => null,
         ]);
 
         Auth::login($user);
 
         return redirect()->route('whatsapp.verify')
-            ->with('success', 'Akun berhasil dibuat. Silakan verifikasi nomor WhatsApp terlebih dahulu.');
+            ->with('success', 'Akun berhasil dibuat! Silakan verifikasi WhatsApp kamu.');
+    }
+
+    private function normalizeWhatsapp(string $phone): string
+    {
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+
+        if (str_starts_with($phone, '0')) {
+            return '62'.substr($phone, 1);
+        }
+
+        if (! str_starts_with($phone, '62')) {
+            return '62'.$phone;
+        }
+
+        return $phone;
     }
 }
