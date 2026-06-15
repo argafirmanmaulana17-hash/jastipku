@@ -7,6 +7,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'JastipKu - Jasa Titip Kampus')</title>
 
+    <link rel="icon" type="image/png" href="{{ asset('images/logo1.png') }}?v=4">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo1.png') }}?v=4">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap"

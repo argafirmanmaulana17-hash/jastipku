@@ -36,7 +36,7 @@ class RegisterController extends Controller
         }
 
         $validated = $request->validate($rules, [
-            'whatsapp.unique' => 'Nomor WhatsApp ini sudah terdaftar. Silakan gunakan nomor lain atau login ke akun lama.',
+            'whatsapp.unique' => 'Nomor WhatsApp ini sudah terdaftar.',
         ]);
 
         $user = User::create([
