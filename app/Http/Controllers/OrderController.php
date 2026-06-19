@@ -109,7 +109,17 @@ class OrderController extends Controller
                 }
             }
 
-            $ongkosJastip = 3000;
+            $totalQty = $selectedItems->sum(function ($item) {
+                return (int) $item['qty'];
+            });
+
+            if ($totalQty <= 3) {
+                $ongkosJastip = 3000;
+            } elseif ($totalQty <= 8) {
+                $ongkosJastip = 5000;
+            } else {
+                $ongkosJastip = 10000;
+            }
 
             $validated['jenis_harga'] = 'pricelist';
             $validated['menu_item_id'] = null;

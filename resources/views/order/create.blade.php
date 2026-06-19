@@ -204,8 +204,8 @@
                                 </div>
 
                                 <p class="text-xs text-slate-500 mt-2">
-                                    Untuk makanan/minuman, kamu bisa memilih lebih dari satu menu. Ongkos jastip otomatis
-                                    Rp3.000 jika ada menu yang dipilih.
+                                    Ongkos jastip menyesuaikan jumlah menu: <b>1-3 item</b> (Rp 3.000), <b>4-8 item</b> (Rp
+                                    5.000), dan <b>>8 item</b> (Rp 10.000).
                                 </p>
                             </div>
 
@@ -356,6 +356,7 @@
 
         function hitungTotalMenu() {
             let total = 0;
+            let totalQty = 0; // Variabel baru untuk menghitung total jumlah barang
             let tokoPertama = '';
 
             document.querySelectorAll('.qty-menu').forEach(function(input) {
@@ -365,6 +366,7 @@
 
                 if (qty > 0) {
                     total += qty * harga;
+                    totalQty += qty; // Menambahkan qty ke total keseluruhan
 
                     if (!tokoPertama && toko) {
                         tokoPertama = toko;
@@ -372,7 +374,16 @@
                 }
             });
 
-            const ongkos = total > 0 ? 3000 : 0;
+            // LOGIKA TARIF ONGKOS BARU (Sesuai dengan OrderController kamu)
+            let ongkos = 0;
+            if (totalQty > 0 && totalQty <= 3) {
+                ongkos = 3000;
+            } else if (totalQty > 3 && totalQty <= 8) {
+                ongkos = 5000;
+            } else if (totalQty > 8) {
+                ongkos = 10000;
+            }
+
             const totalBayar = total + ongkos;
 
             document.getElementById('total-menu-label').innerText = formatRupiah(total);
