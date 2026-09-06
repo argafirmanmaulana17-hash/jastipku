@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\Rating;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -113,11 +114,6 @@ class DashboardController extends Controller
         ];
 
         return view('dashboard.admin-reports', compact('data'));
-    }
-
-    public function adminSettings()
-    {
-        return view('dashboard.admin-settings');
     }
 
     public function adminMenuItems()
@@ -452,5 +448,28 @@ class DashboardController extends Controller
         ];
 
         return view('dashboard.user-history', compact('orders', 'stats'));
+    }
+
+    public function adminSettings()
+    {
+        $settings = Setting::pluck('value', 'key_name')->toArray();
+
+        return view('dashboard.admin-settings', compact('settings'));
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $request->validate([
+            'open_time' => 'required',
+            'close_time' => 'required',
+        ]);
+
+        $isManualClose = $request->has('is_manual_close') ? '1' : '0';
+
+        Setting::updateOrCreate(['key_name' => 'is_manual_close'], ['value' => $isManualClose]);
+        Setting::updateOrCreate(['key_name' => 'open_time'], ['value' => $request->open_time]);
+        Setting::updateOrCreate(['key_name' => 'close_time'], ['value' => $request->close_time]);
+
+        return back()->with('success', 'Pengaturan jam operasional dan status website berhasil diperbarui!');
     }
 }

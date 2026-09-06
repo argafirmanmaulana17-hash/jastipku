@@ -113,6 +113,9 @@ Route::middleware('auth')->group(function () {
 
             Route::get('/reports', [DashboardController::class, 'adminReports'])->name('reports');
             Route::get('/settings', [DashboardController::class, 'adminSettings'])->name('settings');
+
+            Route::get('/settings', [DashboardController::class, 'adminSettings'])->name('settings');
+            Route::post('/settings', [DashboardController::class, 'updateSettings'])->name('settings.update');
         });
 
         // JASTIPER ROUTES
